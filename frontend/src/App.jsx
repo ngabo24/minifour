@@ -11,7 +11,7 @@ import Footer from './components/Footer/Footer'
 import { useEffect, useMemo, useState } from 'react'
 import LoginPopup from './components/LoginPopup/LoginPopup'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)
 const GUEST_ACCESS_KEY = 'minifour-guest-access'
 
 const getStoredGuestAccess = () => {

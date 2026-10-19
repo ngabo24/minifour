@@ -36,7 +36,7 @@ const StoreContextProvider = ({ children }) => {
 
   useEffect(() => {
     const loadProducts = async () => {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+      const apiBaseUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)
 
       try {
         const response = await fetch(`${apiBaseUrl}/api/products`)
