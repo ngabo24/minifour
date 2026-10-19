@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 import './Chef.css'
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)
+const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)).replace(/\/+$/, '')
 
 const Chef = () => {
   const [user, setUser] = useState(() => {
