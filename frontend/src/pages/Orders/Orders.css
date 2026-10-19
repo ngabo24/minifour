@@ -1,0 +1,78 @@
+.orders-page {
+  padding: 48px 20px 80px;
+  display: flex;
+  justify-content: center;
+}
+
+.orders-card {
+  width: min(960px, 100%);
+  background: #fff;
+  border: 1px solid #efe4d0;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 14px 38px rgba(30, 24, 18, 0.08);
+}
+
+.orders-card h1 {
+  margin: 0 0 20px;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+}
+
+.orders-list {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.order-history-card {
+  border: 1px solid #f0e6da;
+  border-radius: 18px;
+  padding: 20px;
+  background: #fffaf4;
+}
+
+.order-history-head,
+.order-history-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.order-history-head p {
+  margin: 6px 0 0;
+  color: #6b5a47;
+}
+
+.order-history-items {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  color: #2d2b2a;
+}
+
+.order-history-meta {
+  padding-top: 12px;
+  border-top: 1px solid #f0e6da;
+  color: #453d37;
+  font-weight: 600;
+}
+
+.empty-orders,
+.orders-error {
+  margin-top: 16px;
+  color: #6b5a47;
+}
+
+.orders-error {
+  color: #b3261e;
+}
+
+.status-pill {
+  background: #f1e5cb;
+  color: #4b371d;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}

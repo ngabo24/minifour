@@ -1,0 +1,145 @@
+.chef-auth-wrapper {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 40px 0;
+}
+
+.chef-auth-card,
+.chef-order-card {
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 22px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.05);
+}
+
+.chef-auth-card {
+  width: min(420px, 100%);
+  padding: 32px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chef-auth-card h2 {
+  margin: 0;
+  color: #1f1f1f;
+}
+
+.chef-auth-card p {
+  margin: 0;
+  color: #666;
+}
+
+.chef-auth-card input,
+.chef-actions select {
+  width: 100%;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.96rem;
+}
+
+.chef-auth-card button,
+.logout-button {
+  background: tomato;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chef-page {
+  padding: 32px 0 80px;
+}
+
+.chef-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  color: tomato;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.chef-header h1 {
+  font-size: clamp(2rem, 2.5vw, 2.8rem);
+  color: #1f1f1f;
+}
+
+.chef-error {
+  background: #fff1f0;
+  color: #b42318;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.chef-order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.chef-order-card {
+  padding: 18px;
+}
+
+.chef-order-top,
+.chef-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chef-order-top p {
+  margin-top: 6px;
+  color: #666;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff4ec;
+  color: tomato;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.chef-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0;
+  color: #555;
+}
+
+.chef-actions {
+  margin-top: 8px;
+}
+
+.chef-actions select {
+  width: auto;
+  min-width: 150px;
+}
+
+@media (max-width: 640px) {
+  .chef-header,
+  .chef-order-top,
+  .chef-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

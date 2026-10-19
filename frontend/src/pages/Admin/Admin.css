@@ -1,0 +1,649 @@
+.admin-auth-page {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 40px 0;
+}
+
+.admin-auth-card,
+.admin-panel {
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 22px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.05);
+}
+
+.admin-auth-card {
+  width: min(450px, 100%);
+  padding: 32px 26px;
+}
+
+.admin-auth-card h2 {
+  margin-bottom: 8px;
+  color: #1f1f1f;
+  font-size: 2rem;
+}
+
+.admin-auth-card p {
+  margin-bottom: 22px;
+  color: #666;
+}
+
+.admin-login-form,
+.admin-product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-login-form input,
+.admin-product-form input,
+.admin-product-form textarea,
+.admin-product-form select,
+.order-summary select {
+  width: 100%;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.96rem;
+  background: #fff;
+}
+
+.admin-product-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.admin-login-form button,
+.primary-btn,
+.secondary-btn,
+.logout-button,
+.admin-item-actions button,
+.admin-tab {
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-login-form button,
+.primary-btn,
+.logout-button,
+.admin-tab.active {
+  background: tomato;
+  color: #fff;
+  padding: 12px 18px;
+}
+
+.secondary-btn,
+.admin-item-actions button,
+.admin-tab {
+  background: #f1f1f1;
+  color: #1f1f1f;
+  padding: 10px 14px;
+}
+
+.admin-item-actions .danger,
+.danger {
+  background: #ffe8e5;
+  color: #d13f2e;
+}
+
+.admin-page {
+  padding: 32px 0 80px;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  color: tomato;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.admin-header h1 {
+  font-size: clamp(2rem, 3vw, 3rem);
+  color: #1f1f1f;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.payment-layout {
+  align-items: start;
+}
+
+.admin-panel {
+  padding: 22px;
+}
+
+.panel-header {
+  margin-bottom: 18px;
+}
+
+.panel-header h2 {
+  font-size: 1.5rem;
+  color: #1f1f1f;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #444;
+}
+
+.checkbox-row input {
+  width: auto;
+}
+
+.admin-form-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  background: #fafafa;
+}
+
+.admin-item p {
+  color: #666;
+  margin-top: 4px;
+}
+
+.admin-item-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-message,
+.admin-error {
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.admin-message {
+  background: #ecfdf5;
+  color: #0a7a4c;
+}
+
+.admin-error {
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.admin-tab {
+  border: 1px solid #f0f0f0;
+}
+
+.summary-panel {
+  margin-bottom: 24px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  border: 1px solid #f2f2f2;
+  background: #fff8f5;
+  border-radius: 18px;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-card span {
+  color: #666;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-card strong {
+  color: #1f1f1f;
+  font-size: 1.45rem;
+}
+
+.ingredient-lines-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ingredient-lines-header h3 {
+  margin: 0;
+  color: #1f1f1f;
+}
+
+.ingredient-line {
+  display: grid;
+  grid-template-columns: 1.4fr 0.7fr 0.8fr auto;
+  gap: 8px;
+}
+
+.small {
+  padding: 8px 10px;
+  font-size: 0.8rem;
+}
+
+.orders-panel {
+  margin-top: 8px;
+}
+
+.admin-orders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.order-card {
+  padding: 18px;
+  border: 1px solid #f0f0f0;
+  border-radius: 18px;
+  background: #fafafa;
+}
+
+.order-card-top,
+.order-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff4ec;
+  color: tomato;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 16px;
+  color: #555;
+}
+
+.order-summary {
+  margin-top: 8px;
+}
+
+.order-summary select {
+  width: auto;
+  min-width: 150px;
+}
+
+.payment-table-wrap {
+  overflow-x: auto;
+}
+
+.payment-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.payment-table th, .payment-table td {
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.table-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.table-qr-card,
+.table-qr-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  background: #fafafa;
+  padding: 12px;
+}
+
+.admin-table-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.table-qr-card img,
+.table-qr-item img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+}
+
+.table-qr-card small,
+.table-qr-item small {
+  color: #666;
+  word-break: break-all;
+  font-size: 0.72rem;
+}
+
+.table-qr-meta {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.table-qr-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.analytics-layout,
+.reservation-layout {
+  align-items: start;
+}
+
+.analytics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analytics-chart-wrap {
+  width: 100%;
+  min-height: 260px;
+}
+
+.analytics-summary-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.analytics-summary-item,
+.analytics-breakdown ul li,
+.reservation-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  background: #fafafa;
+}
+
+.analytics-summary-item {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.analytics-summary-item span,
+.analytics-breakdown h3,
+.reservation-card-header p,
+.reservation-card-body {
+  color: #666;
+}
+
+.analytics-summary-item strong {
+  font-size: 1.2rem;
+  color: #1f1f1f;
+}
+
+.analytics-breakdown {
+  margin-top: 18px;
+}
+
+.analytics-breakdown h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.analytics-breakdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analytics-breakdown ul li {
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reservation-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.reservation-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.reservation-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  color: #666;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-bottom: 4px;
+}
+
+.calendar-day {
+  min-height: 90px;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.calendar-day-muted {
+  opacity: 0.5;
+}
+
+.calendar-day-selected {
+  border-color: tomato;
+  background: #fff5f1;
+}
+
+.calendar-date {
+  font-weight: 700;
+  color: #1f1f1f;
+}
+
+.calendar-reservation {
+  background: #fff1ed;
+  color: #d95539;
+  border-radius: 999px;
+  padding: 3px 6px;
+  font-size: 0.62rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reservation-list {
+  display: grid;
+  gap: 12px;
+}
+
+.reservation-card {
+  padding: 16px;
+}
+
+.reservation-card-header,
+.reservation-card-body,
+.reservation-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.reservation-card-header {
+  margin-bottom: 12px;
+}
+
+.reservation-card-header strong {
+  color: #1f1f1f;
+  font-size: 1.1rem;
+}
+
+.reservation-card-body {
+  flex-wrap: wrap;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.reservation-card-actions {
+  justify-content: flex-end;
+}
+
+.reservation-card-actions select {
+  min-width: 140px;
+}
+
+.admin-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 23, 23, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.admin-confirm-modal {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
+  padding: 24px;
+}
+
+.admin-confirm-modal h3 {
+  margin: 0 0 12px;
+  color: #1f1f1f;
+  font-size: 1.5rem;
+}
+
+.admin-confirm-modal p {
+  margin: 0 0 18px;
+  color: #555;
+  line-height: 1.6;
+}
+
+.empty-state {
+  color: #666;
+  padding: 18px 0;
+}
+
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-header,
+  .order-card-top,
+  .order-summary,
+  .admin-item,
+  .ingredient-lines-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .two-column,
+  .ingredient-line,
+  .reservation-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .reservation-card-header,
+  .reservation-card-body,
+  .reservation-card-actions,
+  .analytics-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

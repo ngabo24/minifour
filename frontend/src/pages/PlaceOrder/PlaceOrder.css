@@ -1,0 +1,128 @@
+.place-order {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 40px 0 80px;
+}
+
+.place-order-left {
+  flex: 1;
+}
+
+.place-order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.place-order-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.place-order-form input,
+.place-order-form select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  outline: none;
+  font-size: 0.98rem;
+  color: #1f1f1f;
+  background: #fff;
+}
+
+.place-order-form input:focus,
+.place-order-form select:focus {
+  border-color: tomato;
+  box-shadow: 0 0 0 3px rgba(255, 99, 71, 0.12);
+}
+
+.place-order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: #444;
+}
+
+.summary-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-qty {
+  color: tomato;
+  font-weight: 600;
+}
+
+.summary-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 24px 0;
+  padding-top: 12px;
+  border-top: 1px solid #ededed;
+}
+
+.summary-totals div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #4f4f4f;
+}
+
+.summary-totals .grand-total {
+  margin-top: 6px;
+  color: #1f1f1f;
+  font-size: 1.06rem;
+  font-weight: 700;
+}
+
+.place-order-right .primary-btn {
+  width: 100%;
+}
+
+.order-error,
+.order-success {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+}
+
+.order-error {
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.order-success {
+  background: #ecfdf5;
+  color: #0a7a4c;
+}
+
+@media (max-width: 900px) {
+  .place-order {
+    flex-direction: column;
+  }
+
+  .place-order-right {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .place-order-row {
+    grid-template-columns: 1fr;
+  }
+}
