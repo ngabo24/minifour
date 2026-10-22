@@ -35,82 +35,55 @@ const getStoredGuestAccess = () => {
 const GuestAccessGate = ({ onGuestAccessGranted }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const [tableInput, setTableInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  // The table number comes from the URL, so it is derived rather than stored
-  // in state that has to be synchronised by an effect.
   const queryTable = new URLSearchParams(location.search).get('table') || ''
-  const tableNumber = queryTable || tableInput
 
-  const handleTableInputChange = (event) => {
-    setTableInput(event.target.value)
-  }
-
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-
-    const tableValue = tableNumber.trim()
-    if (!tableValue) {
-      setErrorMessage('Please enter your table number or scan the QR code from your table.')
-      return
+  useEffect(() => {
+    if (!queryTable) return
+    const validate = async () => {
+      setLoading(true)
+      setErrorMessage('')
+      try {
+        const response = await fetch(`${API_URL}/api/tables/validate?table=${encodeURIComponent(queryTable)}`)
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.message || 'This table is not available for guest access.')
+        const access = { tableNumber: Number(data.tableNumber), tableName: data.tableName, expiresAt: Number(data.expiresAt) }
+        const guestEmail = `guest-table-${access.tableNumber}@minifour.local`
+        sessionStorage.setItem(GUEST_ACCESS_KEY, JSON.stringify(access))
+        sessionStorage.setItem('minifour-guest-email', guestEmail)
+        localStorage.setItem('minifour-table', String(access.tableNumber))
+        if (onGuestAccessGranted) onGuestAccessGranted(access)
+        navigate('/')
+      } catch (error) {
+        setErrorMessage(error.message)
+      } finally {
+        setLoading(false)
+      }
     }
+    validate()
+  }, [queryTable, onGuestAccessGranted, navigate])
 
-    setLoading(true)
-    setErrorMessage('')
-
-    try {
-      const response = await fetch(`${API_URL}/api/tables/validate?table=${encodeURIComponent(tableValue)}`)
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'This table is not available for guest access.')
-      }
-
-      const access = {
-        tableNumber: Number(data.tableNumber),
-        tableName: data.tableName,
-        expiresAt: Number(data.expiresAt),
-      }
-
-      const guestEmail = `guest-table-${access.tableNumber}@minifour.local`
-      sessionStorage.setItem(GUEST_ACCESS_KEY, JSON.stringify(access))
-      sessionStorage.setItem('minifour-guest-email', guestEmail)
-      localStorage.setItem('minifour-table', String(access.tableNumber))
-      if (onGuestAccessGranted) {
-        onGuestAccessGranted(access)
-      }
-      navigate('/')
-    } catch (error) {
-      setErrorMessage(error.message)
-    } finally {
-      setLoading(false)
-    }
+  if (queryTable) {
+    return (
+      <div style={{ minHeight: '72vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
+        <div style={{ background: '#fffaf6', border: '1px solid #f2dcc0', borderRadius: '24px', boxShadow: '0 16px 36px rgba(30,21,14,0.08)', maxWidth: '560px', width: '100%', padding: '32px 24px', textAlign: 'center' }}>
+          <p style={{ margin: 0, color: '#a67024', fontSize: '0.74rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>Private table access</p>
+          <h1 style={{ margin: '12px 0 12px', fontSize: 'clamp(2rem, 3vw, 2.8rem)', lineHeight: 1.2 }}>{loading ? 'Validating table...' : 'Please scan the QR code at your table'}</h1>
+          <p style={{ margin: 0, color: '#5d4f46', lineHeight: 1.6 }}>This restaurant is protected for guest table access only. Use the QR code at your table to unlock temporary access and continue ordering.</p>
+          {errorMessage && <p style={{ margin: '12px 0 0', color: '#9b2c2c', fontWeight: 600 }}>{errorMessage}</p>}
+        </div>
+      </div>
+    )
   }
 
   return (
     <div style={{ minHeight: '72vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
-      <div style={{ background: '#fffaf6', border: '1px solid #f2dcc0', borderRadius: '24px', boxShadow: '0 16px 36px rgba(30,21,14,0.08)', maxWidth: '560px', width: '100%', padding: '32px 24px' }}>
+      <div style={{ background: '#fffaf6', border: '1px solid #f2dcc0', borderRadius: '24px', boxShadow: '0 16px 36px rgba(30,21,14,0.08)', maxWidth: '560px', width: '100%', padding: '32px 24px', textAlign: 'center' }}>
         <p style={{ margin: 0, color: '#a67024', fontSize: '0.74rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>Private table access</p>
-        <h1 style={{ margin: '12px 0 12px', fontSize: 'clamp(2rem, 3vw, 2.8rem)', lineHeight: 1.2 }}>Scan the QR code or enter your table number</h1>
-        <p style={{ margin: 0, color: '#5d4f46', lineHeight: 1.6 }}>This restaurant is protected for guest table access only. Use the QR code at your table to unlock temporary access and continue ordering.</p>
-
-        <form onSubmit={handleSubmit} style={{ marginTop: '20px', display: 'grid', gap: '14px' }}>
-          <input
-            type='number'
-            min='1'
-            value={tableNumber}
-            onChange={handleTableInputChange}
-            placeholder='Table number'
-            required
-            style={{ border: '1px solid #eadfcf', borderRadius: '12px', padding: '14px 16px', fontSize: '1rem' }}
-          />
-          {errorMessage && <p style={{ margin: 0, color: '#9b2c2c', fontWeight: 600 }}>{errorMessage}</p>}
-          <button type='submit' disabled={loading} style={{ border: 'none', background: '#cf7b2a', color: '#fff', borderRadius: '12px', padding: '14px 18px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}>
-            {loading ? 'Checking table...' : 'Continue'}
-          </button>
-        </form>
+        <h1 style={{ margin: '12px 0 12px', fontSize: 'clamp(2rem, 3vw, 2.8rem)', lineHeight: 1.2 }}>Scan the QR code at your table</h1>
+        <p style={{ margin: 0, color: '#5d4f46', lineHeight: 1.6 }}>This restaurant is protected for guest table access only. Use the QR code at your table to unlock temporary access and continue ordering. Manual table entry is not allowed.</p>
       </div>
     </div>
   )
