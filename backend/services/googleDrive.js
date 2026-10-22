@@ -95,18 +95,30 @@ const uploadFile = async (fileBuffer, filename, mimeType, folderId) => {
       permission: { type: 'anyone', role: 'reader' },
       supportsAllDrives: true,
     })
-  } catch {
-    // Non-fatal: the file still exists, just not publicly shared.
+  } catch (err) {
+    console.error('Failed to set file permissions:', err.message)
   }
 
+  // Make the file viewable by anyone with the link
+  try {
+    await drive.permissions.create({
+      fileId,
+      permission: { type: 'anyone', role: 'reader' },
+      supportsAllDrives: true,
+    })
+  } catch (err) {
+    console.error('Failed to set file permissions:', err.message)
+  }
+
+  // Return direct view URL
   return {
     _id: fileId,
     name: response.data.name,
     mimeType: response.data.mimeType,
     size: response.data.size,
     createdTime: response.data.createdTime,
-    webContentLink: response.data.webContentLink,
-    thumbnailLink: response.data.thumbnailLink,
+    webContentLink: response.data.webContentLink || `https://drive.google.com/uc?export=view&id=${fileId}`,
+    thumbnailLink: response.data.thumbnailLink || `https://drive.google.com/thumbnail?id=${fileId}`,
   }
 }
 

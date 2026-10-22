@@ -253,44 +253,40 @@ const Admin = () => {
     if (!file) return
 
     try {
-      // Convert the file to a base64 string for the backend upload.
-      const toBase64 = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result || ''))
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
-
-      const base64 = await toBase64(file)
-      const response = await fetch(`${API_URL}/api/admin/upload-image`, {
+      const signatureResponse = await fetch(`${API_URL}/api/admin/upload-signature`, {
         method: 'POST',
         headers: authHeaders,
-        body: JSON.stringify({
-          file: base64,
-          filename: file.name,
-          mimeType: file.type,
-          folderId: import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID || undefined,
-        }),
+        body: JSON.stringify({ folder: 'minifour/products' }),
       })
 
-      const data = await response.json()
+      const signatureData = await signatureResponse.json()
+      if (signatureResponse.ok && signatureData.uploadUrl) {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('api_key', signatureData.apiKey)
+        formData.append('timestamp', String(signatureData.timestamp))
+        formData.append('signature', signatureData.signature)
+        formData.append('folder', signatureData.folder)
 
-      if (response.ok && data.url) {
-        setProductForm((prev) => ({ ...prev, image: data.url }))
-        return
+        const uploadResponse = await fetch(signatureData.uploadUrl, {
+          method: 'POST',
+          body: formData,
+        })
+
+        const uploadData = await uploadResponse.json()
+        if (uploadResponse.ok && (uploadData.secure_url || uploadData.url)) {
+          setProductForm((prev) => ({ ...prev, image: uploadData.secure_url || uploadData.url }))
+          return
+        }
       }
 
-      // If Google Drive is not configured, fall back to storing the base64
-      // data URL directly in the product record.
-      if (data.message && /google drive/i.test(data.message)) {
-        setProductForm((prev) => ({ ...prev, image: base64 }))
-        setMessage('Image stored locally (Google Drive not configured).')
-        return
+      // Fallback to local preview if the backend upload fails.
+      const reader = new FileReader()
+      reader.onload = () => {
+        setProductForm((prev) => ({ ...prev, image: String(reader.result || '') }))
       }
-
-      // Last resort: use the base64 preview.
-      setProductForm((prev) => ({ ...prev, image: base64 }))
-    } catch (error) {
+      reader.readAsDataURL(file)
+    } catch {
       setAuthError('Image upload failed. Falling back to the local preview copy.')
     }
   }
@@ -1455,21 +1451,21 @@ const Admin = () => {
             <div className='table-qr-grid'>
               {driveImages.map((file) => (
                 <div className='table-qr-card' key={file.id}>
-                  <img
-                    src={file.thumbnailLink || `https://drive.google.com/thumbnail?id=${file.id}`}
-                    alt={file.name}
-                    loading='lazy'
-                  />
-                  <small style={{ wordBreak: 'break-all' }}>{file.name}</small>
-                  <button
-                    type='button'
-                    className='secondary-btn small'
-                    onClick={() => {
-                      const url = file.webContentLink || `https://drive.google.com/uc?export=view&id=${file.id}`
-                      setProductForm((prev) => ({ ...prev, image: url }))
-                      setShowDriveGallery(false)
-                    }}
-                  >
+              <img
+                src={file.thumbnailLink || `https://drive.google.com/thumbnail?id=${file.id}`}
+                alt={file.name}
+                loading='lazy'
+              />
+              <small style={{ wordBreak: 'break-all' }}>{file.name}</small>
+              <button
+                type='button'
+                className='secondary-btn small'
+                onClick={() => {
+                  const url = `https://drive.google.com/uc?export=view&id=${file.id}`
+                  setProductForm((prev) => ({ ...prev, image: url }))
+                  setShowDriveGallery(false)
+                }}
+              >
                     Use image
                   </button>
                 </div>

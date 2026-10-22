@@ -10,7 +10,6 @@ const Reservation = require('../models/Reservation')
 const protect = require('../middleware/authMiddleware')
 const adminOnly = require('../middleware/adminMiddleware')
 const { MENU_CATEGORIES, isValidCategory } = require('../data/categories')
-const googleDrive = require('../services/googleDrive')
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -45,8 +44,8 @@ router.use(adminOnly)
 router.post('/upload-image', protect, adminOnly, async (req, res) => {
   const { file, filename, mimeType, folderId } = req.body || {}
 
-  if (!googleDrive.isConfigured()) {
-    return res.status(503).json({ message: 'Google Drive is not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY in backend/.env.' })
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    return res.status(503).json({ message: 'Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in backend/.env.' })
   }
 
   if (!file || !filename) {
@@ -55,55 +54,40 @@ router.post('/upload-image', protect, adminOnly, async (req, res) => {
 
   try {
     const buffer = Buffer.from(String(file).replace(/^data:[^;]*;base64,/, ''), 'base64')
-    const driveFile = await googleDrive.uploadFile(buffer, filename, mimeType || 'image/jpeg', folderId || null)
+    const publicId = `${folderId || 'minifour/products'}/${Date.now()}-${String(filename).replace(/\.[^/.]+$/, '')}`
 
-    const publicUrl = driveFile.webContentLink || `https://drive.google.com/uc?export=view&id=${driveFile._id}`
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          public_id: publicId,
+          folder: folderId || 'minifour/products',
+          use_filename: false,
+          unique_filename: true,
+        },
+        (error, result) => {
+          if (error) reject(error)
+          else resolve(result)
+        }
+      )
+      stream.end(buffer)
+    })
 
     res.json({
-      id: driveFile._id,
-      name: driveFile.name,
-      url: publicUrl,
-      webContentLink: driveFile.webContentLink,
-      thumbnailLink: driveFile.thumbnailLink,
+      id: uploadResult.public_id,
+      name: uploadResult.original_filename || filename,
+      url: uploadResult.secure_url,
+      webContentLink: uploadResult.secure_url,
+      thumbnailLink: uploadResult.eager?.[0]?.secure_url || uploadResult.secure_url,
     })
   } catch (error) {
-    console.error('Google Drive upload failed:', error.message)
+    console.error('Cloudinary upload failed:', error.message)
     res.status(500).json({ message: error.message || 'Image upload failed.' })
   }
 })
 
-router.get('/drive-images', protect, adminOnly, async (req, res) => {
-  const { folderId } = req.query
-
-  if (!googleDrive.isConfigured()) {
-    return res.status(503).json({ message: 'Google Drive is not configured.' })
-  }
-
-  try {
-    const files = await googleDrive.listDriveImages(folderId || null)
-    res.json(files)
-  } catch (error) {
-    console.error('Google Drive list failed:', error.message)
-    res.status(500).json({ message: error.message || 'Failed to list Google Drive images.' })
-  }
-})
-
-router.delete('/drive-images/:fileId', protect, adminOnly, async (req, res) => {
-  if (!googleDrive.isConfigured()) {
-    return res.status(503).json({ message: 'Google Drive is not configured.' })
-  }
-
-  try {
-    await googleDrive.deleteFile(req.params.fileId)
-    res.json({ message: 'Image removed from Google Drive.' })
-  } catch (error) {
-    console.error('Google Drive delete failed:', error.message)
-    res.status(500).json({ message: error.message || 'Failed to delete image from Google Drive.' })
-  }
-})
-
-router.post('/upload-signature', async (req, res) => {
-  const { folder = 'minifour' } = req.body || {}
+router.get('/upload-signature', async (req, res) => {
+  const { folder = 'minifour/products' } = req.body || {}
 
   if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
     return res.status(400).json({ message: 'Cloudinary environment variables are not configured.' })
@@ -245,19 +229,6 @@ router.delete('/products/:id', async (req, res) => {
           invalidate: true,
         })
         imageDeleted = result.result === 'ok' || result.result === 'not found'
-      }
-    }
-
-    // Google Drive cleanup
-    if (googleDrive.isConfigured()) {
-      const driveIdMatch = imageUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) || imageUrl.match(/drive\.google\.com\/(?:u\/\d+\/)?(?:d|file)\/([a-zA-Z0-9_-]+)/)
-      if (driveIdMatch) {
-        try {
-          await googleDrive.deleteFile(driveIdMatch[1])
-          imageDeleted = true
-        } catch {
-          // Non-fatal
-        }
       }
     }
   } catch (error) {
