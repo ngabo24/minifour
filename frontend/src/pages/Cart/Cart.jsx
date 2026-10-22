@@ -11,7 +11,8 @@ const Cart = () => {
   const cartEntries = food_list.filter((item) => cartItems[item._id])
   const itemCount = cartEntries.reduce((total, item) => total + cartItems[item._id], 0)
   const subtotal = cartEntries.reduce((total, item) => total + item.price * cartItems[item._id], 0)
-  const deliveryFee = subtotal > 0 ? 2 : 0
+  const tableNumber = Number(localStorage.getItem('minifour-table') || 0)
+  const deliveryFee = tableNumber ? 0 : subtotal > 0 ? 2000 : 0
   const total = subtotal + deliveryFee
 
   if (!cartEntries.length) {
