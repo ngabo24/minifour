@@ -86,7 +86,7 @@ router.post('/upload-image', protect, adminOnly, async (req, res) => {
   }
 })
 
-router.get('/upload-signature', async (req, res) => {
+router.post('/upload-signature', async (req, res) => {
   const { folder = 'minifour/products' } = req.body || {}
 
   if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
