@@ -19,6 +19,7 @@ const adminRoutes = require('./routes/adminRoutes')
 const chefRoutes = require('./routes/chefRoutes')
 const reservationRoutes = require('./routes/reservationRoutes')
 const Table = require('./models/Table')
+const Order = require('./models/Order')
 const flyerProducts = require('./data/products')
 
 const ensureFlyerMenu = async () => {
