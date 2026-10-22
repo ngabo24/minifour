@@ -108,6 +108,19 @@ const GuestAccessGate = ({ onGuestAccessGranted }) => {
             ))}
           </div>
         )}
+        <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #eadfcf' }}>
+          <p style={{ margin: '0 0 12px', color: '#5d4f46', lineHeight: 1.6 }}>Ordering for outside catering or delivery?</p>
+          <button type='button' onClick={() => {
+            const access = { tableNumber: 0, tableName: 'Delivery', expiresAt: Date.now() + 60 * 60 * 1000 }
+            sessionStorage.setItem(GUEST_ACCESS_KEY, JSON.stringify(access))
+            sessionStorage.setItem('minifour-guest-email', 'guest-delivery@minifour.local')
+            localStorage.removeItem('minifour-table')
+            if (onGuestAccessGranted) onGuestAccessGranted(access)
+            navigate('/')
+          }} style={{ border: 'none', background: '#cf7b2a', color: '#fff', borderRadius: '12px', padding: '14px 18px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}>
+            Continue as delivery / outside catering
+          </button>
+        </div>
       </div>
     </div>
   )
