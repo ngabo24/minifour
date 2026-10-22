@@ -725,22 +725,18 @@ const Admin = () => {
       </html>
     `
 
-    const printBlob = new Blob([printHtml], { type: 'text/html;charset=utf-8' })
-    const printUrl = URL.createObjectURL(printBlob)
-    const printWindow = window.open(printUrl, '_blank', 'width=520,height=700')
-
+    const printWindow = window.open('', '_blank', 'width=520,height=700')
     if (!printWindow) {
-      URL.revokeObjectURL(printUrl)
+      alert('Please allow popups to print the QR label.')
       return
     }
-
-    printWindow.addEventListener('load', () => {
-      setTimeout(() => {
-        printWindow.focus()
-        printWindow.print()
-        setTimeout(() => URL.revokeObjectURL(printUrl), 1000)
-      }, 300)
-    }, { once: true })
+    printWindow.document.open()
+    printWindow.document.write(printHtml)
+    printWindow.document.close()
+    printWindow.focus()
+    setTimeout(() => {
+      printWindow.print()
+    }, 300)
   }
 
   const filteredReservations = useMemo(() => {
