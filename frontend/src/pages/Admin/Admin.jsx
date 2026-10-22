@@ -274,14 +274,23 @@ const Admin = () => {
       })
 
       const data = await response.json()
+
       if (response.ok && data.url) {
         setProductForm((prev) => ({ ...prev, image: data.url }))
         return
       }
 
-      // Fallback to local preview if the backend upload fails.
+      // If Google Drive is not configured, fall back to storing the base64
+      // data URL directly in the product record.
+      if (data.message && /google drive/i.test(data.message)) {
+        setProductForm((prev) => ({ ...prev, image: base64 }))
+        setMessage('Image stored locally (Google Drive not configured).')
+        return
+      }
+
+      // Last resort: use the base64 preview.
       setProductForm((prev) => ({ ...prev, image: base64 }))
-    } catch {
+    } catch (error) {
       setAuthError('Image upload failed. Falling back to the local preview copy.')
     }
   }

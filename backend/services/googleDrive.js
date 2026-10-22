@@ -4,11 +4,27 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 let driveClient = null
 
+// Extracts a folder ID from either a bare ID or a full Google Drive URL.
+const resolveFolderId = (value) => {
+  if (!value) return null
+  const trimmed = String(value).trim()
+  if (!trimmed) return null
+
+  // If it is already a bare ID, return it.
+  if (!/^https?:\/\//i.test(trimmed)) return trimmed
+
+  // Otherwise try to extract the folder ID from a Drive URL.
+  const match = trimmed.match(/\/folders\/([a-zA-Z0-9_-]+)/)
+  return match ? match[1] : null
+}
+
 const getDriveClient = () => {
   if (driveClient) return driveClient
 
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
-  const privateKey = (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n')
+  const clientEmail = (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '').trim()
+  const privateKey = (process.env.GOOGLE_PRIVATE_KEY || '')
+    .replace(/\\n/g, '\n')
+    .trim()
 
   if (!clientEmail || !privateKey) {
     throw new Error('Google service account credentials are not configured.')
@@ -21,13 +37,14 @@ const getDriveClient = () => {
 
 const listDriveImages = async (folderId) => {
   const drive = getDriveClient()
-  const query = folderId
-    ? `'${folderId}' in parents and trashed = false`
+  const resolved = resolveFolderId(folderId)
+  const query = resolved
+    ? `'${resolved}' in parents and trashed = false`
     : 'trashed = false'
 
   const response = await drive.files.list({
     q: query,
-    fields: 'files(id, name, mimeType, size, createdTime)',
+    fields: 'files(id, name, mimeType, size, createdTime, webContentLink, thumbnailLink)',
     pageSize: 100,
     supportsAllDrives: true,
   })
@@ -37,14 +54,15 @@ const listDriveImages = async (folderId) => {
 
 const findImageByName = async (folderId, name) => {
   const drive = getDriveClient()
+  const resolved = resolveFolderId(folderId)
   const escaped = name.replace(/'/g, "\\'")
-  const query = folderId
-    ? `'${folderId}' in parents and name = '${escaped}' and trashed = false`
+  const query = resolved
+    ? `'${resolved}' in parents and name = '${escaped}' and trashed = false`
     : `name = '${escaped}' and trashed = false`
 
   const response = await drive.files.list({
     q: query,
-    fields: 'files(id, name, mimeType, size, createdTime)',
+    fields: 'files(id, name, mimeType, size, createdTime, webContentLink, thumbnailLink)',
     pageSize: 1,
     supportsAllDrives: true,
   })
@@ -55,8 +73,9 @@ const findImageByName = async (folderId, name) => {
 
 const uploadFile = async (fileBuffer, filename, mimeType, folderId) => {
   const drive = getDriveClient()
+  const resolved = resolveFolderId(folderId)
   const fileMetadata = { name: filename }
-  if (folderId) fileMetadata.parents = [folderId]
+  if (resolved) fileMetadata.parents = [resolved]
 
   const response = await drive.files.create({
     fields: 'id, name, mimeType, size, createdTime, webContentLink, thumbnailLink',
@@ -107,7 +126,7 @@ const getFile = async (fileId) => {
 }
 
 const isConfigured = () =>
-  Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY)
+  Boolean((process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '').trim() && (process.env.GOOGLE_PRIVATE_KEY || '').trim())
 
 module.exports = {
   getDriveClient,
@@ -117,4 +136,5 @@ module.exports = {
   deleteFile,
   getFile,
   isConfigured,
+  resolveFolderId,
 }
