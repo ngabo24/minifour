@@ -84,7 +84,7 @@ router.post('/', optionalAuth, async (req, res) => {
   )
 
   const subtotal = productLookup.reduce((total, item) => total + Number(item.price) * Number(item.quantity), 0)
-  const deliveryFee = 0
+  const deliveryFee = tableNumber ? 0 : (subtotal > 0 ? 2000 : 0)
   const totalCost = productLookup.reduce((total, item) => total + Number(item.costPrice) * Number(item.quantity), 0)
 
   const parsedTableNumber = tableNumber ? Number(tableNumber) : null
