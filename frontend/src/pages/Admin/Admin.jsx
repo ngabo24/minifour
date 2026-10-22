@@ -727,7 +727,24 @@ const Admin = () => {
 
     const printWindow = window.open('', '_blank', 'width=520,height=700')
     if (!printWindow) {
-      alert('Please allow popups to print the QR label.')
+      // Fallback: use an iframe
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'fixed'
+      iframe.style.right = '0'
+      iframe.style.bottom = '0'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = '0'
+      document.body.appendChild(iframe)
+      const doc = iframe.contentWindow.document
+      doc.open()
+      doc.write(printHtml)
+      doc.close()
+      setTimeout(() => {
+        iframe.contentWindow.focus()
+        iframe.contentWindow.print()
+        setTimeout(() => document.body.removeChild(iframe), 1000)
+      }, 300)
       return
     }
     printWindow.document.open()
