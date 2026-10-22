@@ -65,17 +65,32 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'https://minifour.vercel.app',
+  'https://minifour-frontend.vercel.app',
   process.env.FRONTEND_URL,
 ]
   .filter(Boolean)
-  .flatMap((origin) => origin.split(',').map((entry) => entry.trim()))
+  .flatMap((origin) => String(origin).split(',').map((entry) => entry.trim()))
   .filter((origin) => /^https?:\/\//.test(origin))
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/+$/, ''))) {
-      callback(null, true)
-      return
+    // Allow requests with no origin (like mobile apps, curl requests, or same-origin requests)
+    if (!origin) {
+      return callback(null, true)
+    }
+
+    // Check against allowed origins
+    if (
+      allowedOrigins.includes(origin) ||
+      allowedOrigins.includes(origin.replace(/\/+$/, '')) ||
+      allowedOrigins.some((allowed) => origin === allowed || origin.endsWith(allowed.replace(/^https?:\/\//, '')))
+    ) {
+      return callback(null, true)
+    }
+
+    // In production on Vercel, also allow any vercel.app subdomain
+    if (process.env.NODE_ENV === 'production' && /\.vercel\.app$/.test(origin)) {
+      return callback(null, true)
     }
 
     callback(new Error('CORS policy denied this origin'))
@@ -87,7 +102,17 @@ const corsOptions = {
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true)
+      if (
+        allowedOrigins.includes(origin) ||
+        allowedOrigins.includes(origin.replace(/\/+$/, '')) ||
+        (process.env.NODE_ENV === 'production' && /\.vercel\.app$/.test(origin))
+      ) {
+        return callback(null, true)
+      }
+      callback(new Error('CORS policy denied this origin'))
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   },
@@ -99,6 +124,26 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: false,
 }))
+// Enable CORS for all requests
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  if (
+    !origin ||
+    allowedOrigins.includes(origin) ||
+    (process.env.NODE_ENV === 'production' && /\.vercel\.app$/.test(origin))
+  ) {
+    res.header('Access-Control-Allow-Origin', origin || '*')
+  } else {
+    res.header('Access-Control-Allow-Origin', '*')
+  }
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Allow-Credentials', 'true')
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204)
+  }
+  next()
+})
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
 app.use(express.json({ limit: '1mb' }))
