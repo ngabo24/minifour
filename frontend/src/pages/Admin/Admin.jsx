@@ -283,6 +283,7 @@ const Admin = () => {
       setProductForm((prev) => ({ ...prev, image: base64 }))
       setAuthError(data.message || 'Image upload failed. Falling back to local preview.')
     } catch (error) {
+      console.error('Upload error:', error)
       setAuthError('Image upload failed. Falling back to the local preview copy.')
     }
   }
