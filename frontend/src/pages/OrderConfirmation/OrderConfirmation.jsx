@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { formatCurrency } from '../../utils/currency'
 import './OrderConfirmation.css'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)).replace(/\/+$/, '')
@@ -237,7 +238,7 @@ const OrderConfirmation = () => {
           </div>
           <div>
             <span>Total</span>
-            <strong>${Number(order.total || 0).toFixed(2)}</strong>
+            <strong>{formatCurrency(Number(order.total || 0))}</strong>
           </div>
         </div>
 
@@ -245,7 +246,7 @@ const OrderConfirmation = () => {
           <div className='payment-box' style={{ marginTop: '20px', border: '1px solid #f0d7b4', background: '#fffaf4', padding: '16px', borderRadius: '14px' }}>
             <p style={{ marginTop: 0, marginBottom: '10px', fontWeight: 700 }}>MTN Mobile Money payment</p>
             <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>
-              ${Number(order.total || 0).toFixed(2)}
+              {formatCurrency(Number(order.total || 0))}
             </p>
             <p style={{ margin: '8px 0 16px', color: '#5d4f46' }}>
               {order.momoPhone
@@ -276,7 +277,7 @@ const OrderConfirmation = () => {
           {(order.items || []).map((item, index) => (
             <div className='confirmation-item-row' key={`${order._id || index}-${index}`}>
               <span>{item.quantity}x {item.name}</span>
-              <strong>${Number(item.price * item.quantity).toFixed(2)}</strong>
+              <strong>{formatCurrency(Number(item.price * item.quantity))}</strong>
             </div>
           ))}
         </div>

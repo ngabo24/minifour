@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { formatCurrency } from '../../utils/currency'
 import './Orders.css'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)).replace(/\/+$/, '')
@@ -106,7 +107,7 @@ const Orders = () => {
               </div>
 
               <div className='order-history-meta'>
-                <span>Total: ${Number(order.total || 0).toFixed(2)}</span>
+                <span>Total: {formatCurrency(Number(order.total || 0))}</span>
                 <span>{formatOrderDate(order.createdAt)}</span>
               </div>
             </article>

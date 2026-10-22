@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
+import { formatCurrency } from '../../utils/currency'
 import './Chef.css'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)).replace(/\/+$/, '')
@@ -230,7 +231,7 @@ const Chef = () => {
                 )}
               </div>
               <div style={{ display: 'grid', gap: '4px', textAlign: 'right' }}>
-                <strong>${Number(order.total || 0).toFixed(2)}</strong>
+                <strong>{formatCurrency(Number(order.total || 0))}</strong>
                 <span className='status-pill'>{order.paymentStatus || 'unpaid'}</span>
               </div>
             </div>

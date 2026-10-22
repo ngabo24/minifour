@@ -2,6 +2,7 @@ import './FoodItem.css'
 import { assets } from '../../assets/assets'
 import { useContext } from 'react'
 import { StoreContext } from '../../context/StoreContext'
+import { formatCurrency } from '../../utils/currency'
 
 const FoodItem = ({ id, name, price, description, image }) => {
   const { cartItems, addToCart, removeFromCart } = useContext(StoreContext)
@@ -26,7 +27,7 @@ const FoodItem = ({ id, name, price, description, image }) => {
           <img src={assets.rating_starts} alt='' />
         </div>
         <p className='food-item-desc'>{description}</p>
-        <p className='food-item-price'>${price}</p>
+        <p className='food-item-price'>{formatCurrency(price)}</p>
       </div>
     </div>
   )

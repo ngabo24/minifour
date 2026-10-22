@@ -2,6 +2,7 @@ import { useContext, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { StoreContext } from '../../context/StoreContext'
 import { PAYMENT_METHODS } from '../../constants/payment'
+import { formatCurrency } from '../../utils/currency'
 import './PlaceOrder.css'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)).replace(/\/+$/, '')
@@ -233,7 +234,7 @@ const PlaceOrder = () => {
                 <span className='summary-qty'>{cartItems[item._id]}x</span>
                 <span>{item.name}</span>
               </div>
-              <strong>${item.price * cartItems[item._id]}</strong>
+              <strong>{formatCurrency(item.price * cartItems[item._id])}</strong>
             </div>
           ))}
         </div>
@@ -241,15 +242,15 @@ const PlaceOrder = () => {
         <div className='summary-totals'>
           <div>
             <span>Subtotal</span>
-            <strong>${subtotal}</strong>
+            <strong>{formatCurrency(subtotal)}</strong>
           </div>
           <div>
             <span>Delivery</span>
-            <strong>${deliveryFee}</strong>
+            <strong>{formatCurrency(deliveryFee)}</strong>
           </div>
           <div className='grand-total'>
             <span>Total</span>
-            <strong>${total}</strong>
+            <strong>{formatCurrency(total)}</strong>
           </div>
         </div>
 

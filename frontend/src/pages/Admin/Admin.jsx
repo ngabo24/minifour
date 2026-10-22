@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { MENU_CATEGORIES } from '../../assets/assets'
+import { formatCurrency } from '../../utils/currency'
 import './Admin.css'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)).replace(/\/+$/, '')
@@ -93,6 +94,8 @@ const Admin = () => {
   const [editingIngredientId, setEditingIngredientId] = useState(null)
   const [tableToDelete, setTableToDelete] = useState(null)
   const [message, setMessage] = useState('')
+  const [driveImages, setDriveImages] = useState([])
+  const [showDriveGallery, setShowDriveGallery] = useState(false)
 
   const token = sessionStorage.getItem('minifour-token')
   const authHeaders = {
@@ -231,38 +234,34 @@ const Admin = () => {
     if (!file) return
 
     try {
-      const signatureResponse = await fetch(`${API_URL}/api/admin/upload-signature`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ folder: 'minifour/products' }),
+      // Convert the file to a base64 string for the backend upload.
+      const toBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result || ''))
+        reader.onerror = reject
+        reader.readAsDataURL(file)
       })
 
-      const signatureData = await signatureResponse.json()
-      if (signatureResponse.ok && signatureData.uploadUrl) {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('api_key', signatureData.apiKey)
-        formData.append('timestamp', String(signatureData.timestamp))
-        formData.append('signature', signatureData.signature)
-        formData.append('folder', signatureData.folder)
+      const base64 = await toBase64(file)
+      const response = await fetch(`${API_URL}/api/admin/upload-image`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          file: base64,
+          filename: file.name,
+          mimeType: file.type,
+          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID || undefined,
+        }),
+      })
 
-        const uploadResponse = await fetch(signatureData.uploadUrl, {
-          method: 'POST',
-          body: formData,
-        })
-
-        const uploadData = await uploadResponse.json()
-        if (uploadResponse.ok && (uploadData.secure_url || uploadData.url)) {
-          setProductForm((prev) => ({ ...prev, image: uploadData.secure_url || uploadData.url }))
-          return
-        }
+      const data = await response.json()
+      if (response.ok && data.url) {
+        setProductForm((prev) => ({ ...prev, image: data.url }))
+        return
       }
 
-      const reader = new FileReader()
-      reader.onload = () => {
-        setProductForm((prev) => ({ ...prev, image: String(reader.result || '') }))
-      }
-      reader.readAsDataURL(file)
+      // Fallback to local preview if the backend upload fails.
+      setProductForm((prev) => ({ ...prev, image: base64 }))
     } catch {
       setAuthError('Image upload failed. Falling back to the local preview copy.')
     }
@@ -867,15 +866,15 @@ const Admin = () => {
         <div className='stats-grid'>
           <div className='stat-card'>
             <span>Total revenue</span>
-            <strong>${summary.totalRevenue.toFixed(2)}</strong>
+            <strong>{formatCurrency(summary.totalRevenue)}</strong>
           </div>
           <div className='stat-card'>
             <span>Total cost</span>
-            <strong>${summary.totalCost.toFixed(2)}</strong>
+            <strong>{formatCurrency(summary.totalCost)}</strong>
           </div>
           <div className='stat-card'>
             <span>Gross profit</span>
-            <strong>${summary.grossProfit.toFixed(2)}</strong>
+            <strong>{formatCurrency(summary.grossProfit)}</strong>
           </div>
           <div className='stat-card'>
             <span>Active orders</span>
@@ -984,7 +983,7 @@ const Admin = () => {
                 <div className='admin-item' key={product._id}>
                   <div>
                     <strong>{product.name}</strong>
-                    <p>{product.category} • Sell ${product.price} • Cost ${Number(product.costPrice || 0).toFixed(2)} • Stock: {product.stock}</p>
+                    <p>{product.category} • Sell {formatCurrency(product.price)} • Cost {formatCurrency(Number(product.costPrice || 0))} • Stock: {product.stock}</p>
                   </div>
                   <div className='admin-item-actions'>
                     <button type='button' onClick={() => handleEditProduct(product)}>Edit</button>
@@ -1072,7 +1071,7 @@ const Admin = () => {
                 <div className='admin-item' key={ingredient._id}>
                   <div>
                     <strong>{ingredient.name}</strong>
-                    <p>{ingredient.stock} {ingredient.unit} • {ingredient.category} • cost ${Number(ingredient.costPerUnit || 0).toFixed(2)}</p>
+                    <p>{ingredient.stock} {ingredient.unit} • {ingredient.category} • cost {formatCurrency(Number(ingredient.costPerUnit || 0))}</p>
                   </div>
                   <div className='admin-item-actions'>
                     <button type='button' onClick={() => handleEditIngredient(ingredient)}>Edit</button>
@@ -1146,7 +1145,7 @@ const Admin = () => {
                     <tr key={payment._id}>
                       <td>{payment.customer}</td>
                       <td>{payment.tableNumber ?? '—'}</td>
-                      <td>${Number(payment.total || 0).toFixed(2)}</td>
+                      <td>{formatCurrency(Number(payment.total || 0))}</td>
                       <td>{payment.paymentMethod}</td>
                       <td>{payment.paymentStatus}</td>
                     </tr>
@@ -1186,8 +1185,8 @@ const Admin = () => {
                 <BarChart data={analytics.revenueTrend || []}>
                   <CartesianGrid strokeDasharray='3 3' vertical={false} />
                   <XAxis dataKey='day' />
-                  <YAxis tickFormatter={(value) => `$${value}`} />
-                  <Tooltip formatter={(value) => [`$${value}`, 'Revenue']} />
+                  <YAxis tickFormatter={(value) => `RWF ${Number(value || 0).toLocaleString('en-US')}`} />
+                  <Tooltip formatter={(value) => [`RWF ${Number(value || 0).toLocaleString('en-US')}`, 'Revenue']} />
                   <Bar dataKey='total' fill='#f26b4a' radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -1201,7 +1200,7 @@ const Admin = () => {
             <div className='analytics-summary-list'>
               <div className='analytics-summary-item'>
                 <span>Total revenue</span>
-                <strong>${Number(analytics.summary?.totalRevenue || 0).toFixed(2)}</strong>
+                <strong>{formatCurrency(Number(analytics.summary?.totalRevenue || 0))}</strong>
               </div>
               <div className='analytics-summary-item'>
                 <span>Total orders</span>
@@ -1209,7 +1208,7 @@ const Admin = () => {
               </div>
               <div className='analytics-summary-item'>
                 <span>Average order value</span>
-                <strong>${Number(analytics.summary?.avgOrderValue || 0).toFixed(2)}</strong>
+                <strong>{formatCurrency(Number(analytics.summary?.avgOrderValue || 0))}</strong>
               </div>
               <div className='analytics-summary-item'>
                 <span>Best day</span>
@@ -1390,13 +1389,13 @@ const Admin = () => {
               <div className='order-items'>
                 {order.items.map((item, index) => (
                   <div key={`${order._id}-${index}`}>
-                    {item.quantity}x {item.name} • ${Number(item.price).toFixed(2)}
+                    {item.quantity}x {item.name} • {formatCurrency(Number(item.price))}
                   </div>
                 ))}
               </div>
 
               <div className='order-summary'>
-                <span>Total: ${Number(order.total || 0).toFixed(2)}</span>
+                <span>Total: {formatCurrency(Number(order.total || 0))}</span>
                 <select value={order.status} onChange={(event) => handleStatusChange(order._id, event.target.value)}>
                   <option value='pending'>pending</option>
                   <option value='confirmed'>confirmed</option>

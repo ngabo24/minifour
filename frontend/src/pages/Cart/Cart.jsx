@@ -1,6 +1,7 @@
 import { useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { StoreContext } from '../../context/StoreContext'
+import { formatCurrency } from '../../utils/currency'
 import './Cart.css'
 
 const Cart = () => {
@@ -40,7 +41,7 @@ const Cart = () => {
 
                 <div className='cart-item-info'>
                   <h3>{item.name}</h3>
-                  <p>${item.price} each</p>
+                  <p>{formatCurrency(item.price)} each</p>
                 </div>
 
                 <div className='cart-item-controls'>
@@ -51,7 +52,7 @@ const Cart = () => {
                   </div>
                 </div>
 
-                <p className='cart-item-total'>${itemTotal}</p>
+                <p className='cart-item-total'>{formatCurrency(itemTotal)}</p>
               </div>
             )
           })}
@@ -66,15 +67,15 @@ const Cart = () => {
         </div>
         <div className='summary-row'>
           <span>Subtotal</span>
-          <span>${subtotal}</span>
+          <span>{formatCurrency(subtotal)}</span>
         </div>
         <div className='summary-row'>
           <span>Delivery</span>
-          <span>${deliveryFee}</span>
+          <span>{formatCurrency(deliveryFee)}</span>
         </div>
         <div className='summary-row total'>
           <span>Total</span>
-          <span>${total}</span>
+          <span>{formatCurrency(total)}</span>
         </div>
 
         <div className='cart-actions'>

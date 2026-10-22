@@ -10,6 +10,7 @@ const Reservation = require('../models/Reservation')
 const protect = require('../middleware/authMiddleware')
 const adminOnly = require('../middleware/adminMiddleware')
 const { MENU_CATEGORIES, isValidCategory } = require('../data/categories')
+const googleDrive = require('../services/googleDrive')
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -40,6 +41,66 @@ const router = express.Router()
 
 router.use(protect)
 router.use(adminOnly)
+
+router.post('/upload-image', protect, adminOnly, async (req, res) => {
+  const { file, filename, mimeType, folderId } = req.body || {}
+
+  if (!googleDrive.isConfigured()) {
+    return res.status(503).json({ message: 'Google Drive is not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY in backend/.env.' })
+  }
+
+  if (!file || !filename) {
+    return res.status(400).json({ message: 'An image file and filename are required.' })
+  }
+
+  try {
+    const buffer = Buffer.from(String(file).replace(/^data:[^;]*;base64,/, ''), 'base64')
+    const driveFile = await googleDrive.uploadFile(buffer, filename, mimeType || 'image/jpeg', folderId || null)
+
+    const publicUrl = driveFile.webContentLink || `https://drive.google.com/uc?export=view&id=${driveFile._id}`
+
+    res.json({
+      id: driveFile._id,
+      name: driveFile.name,
+      url: publicUrl,
+      webContentLink: driveFile.webContentLink,
+      thumbnailLink: driveFile.thumbnailLink,
+    })
+  } catch (error) {
+    console.error('Google Drive upload failed:', error.message)
+    res.status(500).json({ message: error.message || 'Image upload failed.' })
+  }
+})
+
+router.get('/drive-images', protect, adminOnly, async (req, res) => {
+  const { folderId } = req.query
+
+  if (!googleDrive.isConfigured()) {
+    return res.status(503).json({ message: 'Google Drive is not configured.' })
+  }
+
+  try {
+    const files = await googleDrive.listDriveImages(folderId || null)
+    res.json(files)
+  } catch (error) {
+    console.error('Google Drive list failed:', error.message)
+    res.status(500).json({ message: error.message || 'Failed to list Google Drive images.' })
+  }
+})
+
+router.delete('/drive-images/:fileId', protect, adminOnly, async (req, res) => {
+  if (!googleDrive.isConfigured()) {
+    return res.status(503).json({ message: 'Google Drive is not configured.' })
+  }
+
+  try {
+    await googleDrive.deleteFile(req.params.fileId)
+    res.json({ message: 'Image removed from Google Drive.' })
+  } catch (error) {
+    console.error('Google Drive delete failed:', error.message)
+    res.status(500).json({ message: error.message || 'Failed to delete image from Google Drive.' })
+  }
+})
 
 router.post('/upload-signature', async (req, res) => {
   const { folder = 'minifour' } = req.body || {}
@@ -171,19 +232,33 @@ router.delete('/products/:id', async (req, res) => {
 
   let imageDeleted = false
   try {
-    const imageUrl = new URL(product.image)
-    const expectedHost = `${process.env.CLOUDINARY_CLOUD_NAME}.res.cloudinary.com`
-    const publicIdMatch = imageUrl.hostname === expectedHost
-      ? imageUrl.pathname.match(/\/image\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/)
-      : null
+    const imageUrl = product.image || ''
 
-    if (publicIdMatch) {
-      const publicId = decodeURIComponent(publicIdMatch[1])
-      const result = await cloudinary.uploader.destroy(publicId, {
-        resource_type: 'image',
-        invalidate: true,
-      })
-      imageDeleted = result.result === 'ok' || result.result === 'not found'
+    // Cloudinary cleanup
+    const cloudinaryHost = `${process.env.CLOUDINARY_CLOUD_NAME}.res.cloudinary.com`
+    if (imageUrl && new URL(imageUrl).hostname === cloudinaryHost) {
+      const publicIdMatch = new URL(imageUrl).pathname.match(/\/image\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/)
+      if (publicIdMatch) {
+        const publicId = decodeURIComponent(publicIdMatch[1])
+        const result = await cloudinary.uploader.destroy(publicId, {
+          resource_type: 'image',
+          invalidate: true,
+        })
+        imageDeleted = result.result === 'ok' || result.result === 'not found'
+      }
+    }
+
+    // Google Drive cleanup
+    if (googleDrive.isConfigured()) {
+      const driveIdMatch = imageUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) || imageUrl.match(/drive\.google\.com\/(?:u\/\d+\/)?(?:d|file)\/([a-zA-Z0-9_-]+)/)
+      if (driveIdMatch) {
+        try {
+          await googleDrive.deleteFile(driveIdMatch[1])
+          imageDeleted = true
+        } catch {
+          // Non-fatal
+        }
+      }
     }
   } catch (error) {
     console.error('Product image cleanup failed:', error.message)
