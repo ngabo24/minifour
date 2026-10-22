@@ -37,8 +37,16 @@ const GuestAccessGate = ({ onGuestAccessGranted }) => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [tables, setTables] = useState([])
 
   const queryTable = new URLSearchParams(location.search).get('table') || ''
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/tables/available`)
+      .then((r) => r.json())
+      .then((data) => setTables(Array.isArray(data) ? data : []))
+      .catch(() => setTables([]))
+  }, [])
 
   useEffect(() => {
     if (!queryTable) return
@@ -65,13 +73,15 @@ const GuestAccessGate = ({ onGuestAccessGranted }) => {
     validate()
   }, [queryTable, onGuestAccessGranted, navigate])
 
+  const cardStyle = { background: '#fffaf6', border: '1px solid #f2dcc0', borderRadius: '24px', boxShadow: '0 16px 36px rgba(30,21,14,0.08)', maxWidth: '560px', width: '100%', padding: '32px 24px', textAlign: 'center' }
+
   if (queryTable) {
     return (
       <div style={{ minHeight: '72vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
-        <div style={{ background: '#fffaf6', border: '1px solid #f2dcc0', borderRadius: '24px', boxShadow: '0 16px 36px rgba(30,21,14,0.08)', maxWidth: '560px', width: '100%', padding: '32px 24px', textAlign: 'center' }}>
+        <div style={cardStyle}>
           <p style={{ margin: 0, color: '#a67024', fontSize: '0.74rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>Private table access</p>
           <h1 style={{ margin: '12px 0 12px', fontSize: 'clamp(2rem, 3vw, 2.8rem)', lineHeight: 1.2 }}>{loading ? 'Validating table...' : 'Please scan the QR code at your table'}</h1>
-          <p style={{ margin: 0, color: '#5d4f46', lineHeight: 1.6 }}>This restaurant is protected for guest table access only. Use the QR code at your table to unlock temporary access and continue ordering.</p>
+          <p style={{ margin: 0, color: '#5d4f46', lineHeight: 1.6 }}>This restaurant is protected for guest table access only.</p>
           {errorMessage && <p style={{ margin: '12px 0 0', color: '#9b2c2c', fontWeight: 600 }}>{errorMessage}</p>}
         </div>
       </div>
@@ -80,10 +90,24 @@ const GuestAccessGate = ({ onGuestAccessGranted }) => {
 
   return (
     <div style={{ minHeight: '72vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
-      <div style={{ background: '#fffaf6', border: '1px solid #f2dcc0', borderRadius: '24px', boxShadow: '0 16px 36px rgba(30,21,14,0.08)', maxWidth: '560px', width: '100%', padding: '32px 24px', textAlign: 'center' }}>
+      <div style={{ ...cardStyle, maxWidth: '720px' }}>
         <p style={{ margin: 0, color: '#a67024', fontSize: '0.74rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700 }}>Private table access</p>
-        <h1 style={{ margin: '12px 0 12px', fontSize: 'clamp(2rem, 3vw, 2.8rem)', lineHeight: 1.2 }}>Scan the QR code at your table</h1>
-        <p style={{ margin: 0, color: '#5d4f46', lineHeight: 1.6 }}>This restaurant is protected for guest table access only. Use the QR code at your table to unlock temporary access and continue ordering. Manual table entry is not allowed.</p>
+        <h1 style={{ margin: '12px 0 12px', fontSize: 'clamp(2rem, 3vw, 2.8rem)', lineHeight: 1.2 }}>Scan a QR code to enter</h1>
+        <p style={{ margin: 0, color: '#5d4f46', lineHeight: 1.6 }}>Manual table entry is disabled. Scan one of the available table QR codes below.</p>
+        {tables.length === 0 ? (
+          <p style={{ marginTop: '16px', color: '#9b2c2c', fontWeight: 600 }}>No tables available right now.</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginTop: '20px' }}>
+            {tables.map((t) => (
+              <a key={t._id} href={`/?table=${t.number}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div style={{ background: '#fff', border: '1px solid #eadfcf', borderRadius: '12px', padding: '12px' }}>
+                  {t.qrCodeUrl ? <img src={t.qrCodeUrl} alt={`Table ${t.number}`} style={{ width: '100%', height: 'auto' }} /> : null}
+                  <strong style={{ display: 'block', marginTop: '8px' }}>{t.name || `Table ${t.number}`}</strong>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

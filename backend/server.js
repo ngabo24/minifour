@@ -228,8 +228,16 @@ const ensureDefaultIngredients = async () => {
   }
 }
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Minifour API is running' })
+app.get('/api/tables/available', async (req, res) => {
+  try {
+    const tables = await Table.find({ active: true }).sort({ number: 1 }).lean()
+    const activeOrders = await Order.find({ status: { $in: ['pending', 'confirmed', 'preparing', 'ready'] } }).select('tableNumber').lean()
+    const inUse = new Set(activeOrders.map((o) => Number(o.tableNumber)).filter(Boolean))
+    const available = tables.filter((t) => !inUse.has(Number(t.number)))
+    res.json(available)
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to load tables.' })
+  }
 })
 
 app.get('/api/tables/validate', async (req, res) => {
