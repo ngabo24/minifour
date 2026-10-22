@@ -141,7 +141,7 @@ router.post('/', optionalAuth, async (req, res) => {
       console.error('MTN MoMo payment request failed:', error.message)
       order.paymentStatus = 'failed'
       await order.save()
-      paymentInitiationError = 'The MTN payment request could not be started. Please place the order again or contact the restaurant.'
+      paymentInitiationError = `The MTN payment request could not be started: ${error.message}`
     }
   }
 
