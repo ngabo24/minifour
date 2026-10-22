@@ -64,7 +64,6 @@ const Navbar = ({ setShowLogin }) => {
       </ul>
 
       <div className='navbar-right'>
-        <img src={assets.search_icon} alt='' />
 
         <Link to='/orders' onClick={() => handleMenuClick('orders')} className={menu === 'orders' ? 'active' : ''}>orders</Link>
 
