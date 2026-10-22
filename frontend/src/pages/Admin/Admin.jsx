@@ -253,40 +253,36 @@ const Admin = () => {
     if (!file) return
 
     try {
-      const signatureResponse = await fetch(`${API_URL}/api/admin/upload-signature`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ folder: 'minifour/products' }),
+      const toBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result || ''))
+        reader.onerror = reject
+        reader.readAsDataURL(file)
       })
 
-      const signatureData = await signatureResponse.json()
-      if (signatureResponse.ok && signatureData.uploadUrl) {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('api_key', signatureData.apiKey)
-        formData.append('timestamp', String(signatureData.timestamp))
-        formData.append('signature', signatureData.signature)
-        formData.append('folder', signatureData.folder)
+      const base64 = await toBase64(file)
+      const response = await fetch(`${API_URL}/api/admin/upload-image`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          file: base64,
+          filename: file.name,
+          mimeType: file.type,
+          folderId: 'minifour/products',
+        }),
+      })
 
-        const uploadResponse = await fetch(signatureData.uploadUrl, {
-          method: 'POST',
-          body: formData,
-        })
+      const data = await response.json()
 
-        const uploadData = await uploadResponse.json()
-        if (uploadResponse.ok && (uploadData.secure_url || uploadData.url)) {
-          setProductForm((prev) => ({ ...prev, image: uploadData.secure_url || uploadData.url }))
-          return
-        }
+      if (response.ok && data.url) {
+        setProductForm((prev) => ({ ...prev, image: data.url }))
+        return
       }
 
       // Fallback to local preview if the backend upload fails.
-      const reader = new FileReader()
-      reader.onload = () => {
-        setProductForm((prev) => ({ ...prev, image: String(reader.result || '') }))
-      }
-      reader.readAsDataURL(file)
-    } catch {
+      setProductForm((prev) => ({ ...prev, image: base64 }))
+      setAuthError(data.message || 'Image upload failed. Falling back to local preview.')
+    } catch (error) {
       setAuthError('Image upload failed. Falling back to the local preview copy.')
     }
   }
@@ -952,9 +948,6 @@ const Admin = () => {
                 <span>Upload product image</span>
                 <input type='file' accept='image/*' onChange={handleProductImageChange} />
               </label>
-              <button type='button' className='secondary-btn small' onClick={() => { setShowDriveGallery(true); loadDriveImages() }}>
-                Browse Google Drive
-              </button>
               <div className='two-column'>
                 <input name='stock' type='number' min='0' value={productForm.stock} onChange={handleProductInput} placeholder='Stock' required />
                 <label className='checkbox-row'>
