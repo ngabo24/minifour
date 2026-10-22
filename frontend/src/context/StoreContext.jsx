@@ -19,7 +19,7 @@ const filenameImageMap = Object.fromEntries(
 const resolveProductImage = (product) => {
   const rawImage = typeof product?.image === 'string' ? product.image.trim() : ''
 
-  // Remote uploads (Cloudinary) are used as-is.
+  // Remote uploads (Google Drive, Cloudinary, etc.) are used as-is.
   if (/^https?:\/\//i.test(rawImage)) {
     return rawImage
   }
@@ -38,7 +38,8 @@ const resolveProductImage = (product) => {
 }
 
 const StoreContextProvider = ({ children }) => {
-  const [foodList, setFoodList] = useState(food_list)
+  const [foodList, setFoodList] = useState([])
+  const [loadError, setLoadError] = useState('')
   const [cartItems, setCartItems] = useState(() => {
     try {
       const storedCart = localStorage.getItem('minifour-cart')
@@ -54,11 +55,11 @@ const StoreContextProvider = ({ children }) => {
 
       try {
         const response = await fetch(`${apiBaseUrl}/api/products`)
-        if (!response.ok) throw new Error('Failed to fetch products')
+        if (!response.ok) throw new Error(`Failed to fetch products (${response.status})`)
 
         const products = await response.json()
 
-        if (Array.isArray(products) && products.length) {
+        if (Array.isArray(products)) {
           setFoodList(
             products.map((product) => ({
               ...product,
@@ -66,9 +67,19 @@ const StoreContextProvider = ({ children }) => {
               _id: product._id || product.id,
             }))
           )
+          setLoadError('')
+        } else {
+          throw new Error('Invalid products response from server.')
         }
-      } catch {
-        setFoodList(food_list)
+      } catch (error) {
+        setLoadError(error.message || 'Unable to load the menu from the database.')
+        // Fall back to the static menu only when the API is unreachable.
+        setFoodList(
+          food_list.map((item) => ({
+            ...item,
+            _id: item._id || item.id,
+          }))
+        )
       }
     }
 
@@ -107,6 +118,7 @@ const StoreContextProvider = ({ children }) => {
     setCartItems,
     addToCart,
     removeFromCart,
+    loadError,
   }
 
   return (

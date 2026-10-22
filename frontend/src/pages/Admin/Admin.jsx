@@ -96,6 +96,25 @@ const Admin = () => {
   const [message, setMessage] = useState('')
   const [driveImages, setDriveImages] = useState([])
   const [showDriveGallery, setShowDriveGallery] = useState(false)
+  const [loadingDrive, setLoadingDrive] = useState(false)
+
+  const loadDriveImages = async () => {
+    if (!token) return
+    setLoadingDrive(true)
+    try {
+      const response = await fetch(`${API_URL}/api/admin/drive-images`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setDriveImages(data)
+      }
+    } catch {
+      setAuthError('Failed to load Google Drive images.')
+    } finally {
+      setLoadingDrive(false)
+    }
+  }
 
   const token = sessionStorage.getItem('minifour-token')
   const authHeaders = {
@@ -250,7 +269,7 @@ const Admin = () => {
           file: base64,
           filename: file.name,
           mimeType: file.type,
-          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID || undefined,
+          folderId: import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID || undefined,
         }),
       })
 
@@ -831,7 +850,8 @@ const Admin = () => {
   }))
 
   return (
-    <div className='admin-page'>
+    <>
+      <div className='admin-page'>
       <div className='admin-header'>
         <div>
           <p className='eyebrow'>Dashboard</p>
@@ -927,6 +947,9 @@ const Admin = () => {
                 <span>Upload product image</span>
                 <input type='file' accept='image/*' onChange={handleProductImageChange} />
               </label>
+              <button type='button' className='secondary-btn small' onClick={() => { setShowDriveGallery(true); loadDriveImages() }}>
+                Browse Google Drive
+              </button>
               <div className='two-column'>
                 <input name='stock' type='number' min='0' value={productForm.stock} onChange={handleProductInput} placeholder='Stock' required />
                 <label className='checkbox-row'>
@@ -1410,6 +1433,51 @@ const Admin = () => {
         </div>
       </section>
     </div>
+
+    {showDriveGallery && (
+      <div className='admin-confirm-overlay' onClick={() => setShowDriveGallery(false)}>
+        <div className='admin-confirm-modal' style={{ width: 'min(700px, 95%)', maxHeight: '80vh', overflowY: 'auto' }} onClick={(event) => event.stopPropagation()}>
+          <h3 style={{ marginTop: 0 }}>Google Drive images</h3>
+          <p style={{ color: '#555', marginBottom: '16px' }}>Pick an image from your Google Drive to use as a product photo.</p>
+
+          {loadingDrive ? (
+            <p className='empty-state'>Loading images from Google Drive...</p>
+          ) : (
+            <div className='table-qr-grid'>
+              {driveImages.map((file) => (
+                <div className='table-qr-card' key={file.id}>
+                  <img
+                    src={file.thumbnailLink || `https://drive.google.com/thumbnail?id=${file.id}`}
+                    alt={file.name}
+                    loading='lazy'
+                  />
+                  <small style={{ wordBreak: 'break-all' }}>{file.name}</small>
+                  <button
+                    type='button'
+                    className='secondary-btn small'
+                    onClick={() => {
+                      const url = file.webContentLink || `https://drive.google.com/uc?export=view&id=${file.id}`
+                      setProductForm((prev) => ({ ...prev, image: url }))
+                      setShowDriveGallery(false)
+                    }}
+                  >
+                    Use image
+                  </button>
+                </div>
+              ))}
+              {!driveImages.length && (
+                <p className='empty-state'>No images found in Google Drive.</p>
+              )}
+            </div>
+          )}
+
+          <div className='admin-form-actions' style={{ marginTop: '20px' }}>
+            <button type='button' className='secondary-btn' onClick={() => setShowDriveGallery(false)}>Close</button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 

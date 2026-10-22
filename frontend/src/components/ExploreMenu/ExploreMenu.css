@@ -26,9 +26,13 @@
 .explore-menu-list-item img{
     width:7.5vw;
     min-width: 80px;
+    max-width: 140px;
+    height: auto;
+    aspect-ratio: 1 / 1;
     cursor: pointer;
     border-radius: 50%;
     transition:0.2s;
+    object-fit: cover;
 }
 .explore-menu-list-item p{
     margin-top: 10px;
