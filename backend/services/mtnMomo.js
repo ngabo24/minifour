@@ -7,7 +7,7 @@ const baseUrl = (process.env.MTN_MOMO_BASE_URL || (
     : 'https://sandbox.momodeveloper.mtn.com'
 )).replace(/\/+$/, '')
 const targetEnvironment = process.env.MTN_MOMO_TARGET_ENVIRONMENT || (environment === 'sandbox' ? 'sandbox' : '')
-const currency = process.env.MTN_MOMO_CURRENCY || 'RWF'
+const currency = environment === 'sandbox' ? 'EUR' : (process.env.MTN_MOMO_CURRENCY || 'RWF')
 const requestTimeoutMs = Number(process.env.MTN_MOMO_TIMEOUT_MS || 15000)
 
 let cachedToken
