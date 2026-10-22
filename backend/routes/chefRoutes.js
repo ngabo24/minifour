@@ -46,6 +46,10 @@ router.put('/orders/:id/payment-confirm', async (req, res) => {
     return res.status(404).json({ message: 'Order not found.' })
   }
 
+  if (order.paymentMethod === 'MTN Mobile Money') {
+    return res.status(409).json({ message: 'MTN Mobile Money payments are confirmed directly by the provider.' })
+  }
+
   order.paymentStatus = 'paid'
   order.paymentMethod = 'Mobile Money'
   order.paymentReference = order.paymentReference || 'MM-ACK'

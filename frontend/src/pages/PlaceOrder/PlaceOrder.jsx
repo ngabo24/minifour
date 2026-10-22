@@ -1,6 +1,7 @@
 import { useContext, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { StoreContext } from '../../context/StoreContext'
+import { PAYMENT_METHODS } from '../../constants/payment'
 import './PlaceOrder.css'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)).replace(/\/+$/, '')
@@ -13,7 +14,8 @@ const buildGuestForm = (tableNumber) => ({
   city: 'Restaurant',
   country: 'Local',
   zip: tableNumber ? `T-${tableNumber}` : '0000',
-  payment: 'Pay now (manual)',
+  payment: PAYMENT_METHODS.MOMO,
+  momoPhone: '',
 })
 
 const PlaceOrder = () => {
@@ -52,6 +54,14 @@ const PlaceOrder = () => {
       return
     }
 
+    if (form.payment === PAYMENT_METHODS.MOMO) {
+      const phone = form.momoPhone.replace(/[\s()+-]/g, '')
+      if (!/^\d{8,15}$/.test(phone)) {
+        setSubmitError('Enter a valid mobile number with its country code, for example 250788000000.')
+        return
+      }
+    }
+
     setIsSubmitting(true)
     setSubmitError('')
 
@@ -78,7 +88,7 @@ const PlaceOrder = () => {
         paymentMethod: form.payment,
         tableNumber: tableNumber ? Number(tableNumber) : null,
         guestName: tableNumber ? `Guest Table ${tableNumber}` : `${form.firstName} ${form.lastName}`,
-        paymentStatus: form.payment === 'Pay now (manual)' ? 'manual_paid' : 'paid',
+        momoPhone: form.payment === PAYMENT_METHODS.MOMO ? form.momoPhone : '',
       }
 
       if (tableNumber) {
@@ -98,6 +108,11 @@ const PlaceOrder = () => {
 
       if (!response.ok) {
         throw new Error(data.message || 'Order could not be placed.')
+      }
+
+      if (data.paymentInitiationError) {
+        setSubmitError(data.paymentInitiationError)
+        return
       }
 
       const orderRecord = data.order || {
@@ -183,11 +198,26 @@ const PlaceOrder = () => {
 
           <div className='place-order-row'>
             <select name='payment' value={form.payment} onChange={handleChange}>
-              <option>Pay now (manual)</option>
-              <option>Cash on delivery</option>
-              <option>Card payment</option>
+              <option value={PAYMENT_METHODS.MOMO}>MTN Mobile Money</option>
+              <option value={PAYMENT_METHODS.MANUAL}>Pay now (manual)</option>
+              <option value={PAYMENT_METHODS.CASH}>Cash on delivery</option>
             </select>
           </div>
+
+          {form.payment === PAYMENT_METHODS.MOMO && (
+            <div className='place-order-row'>
+              <input
+                name='momoPhone'
+                type='tel'
+                inputMode='tel'
+                autoComplete='tel'
+                value={form.momoPhone}
+                onChange={handleChange}
+                placeholder='Mobile number for MTN MoMo (e.g. 250788000000)'
+                required
+              />
+            </div>
+          )}
         </form>
 
         {submitError && <p className='order-error'>{submitError}</p>}

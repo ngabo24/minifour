@@ -13,6 +13,14 @@ const getGuestTableContext = () => {
   return { tableNumber, email }
 }
 
+// Falls back to an empty date when the timestamp is missing so that rendering
+// stays free of impure calls.
+const formatOrderDate = (createdAt) => {
+  if (!createdAt) return ''
+  const parsed = new Date(createdAt)
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toLocaleDateString()
+}
+
 const Orders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -99,7 +107,7 @@ const Orders = () => {
 
               <div className='order-history-meta'>
                 <span>Total: ${Number(order.total || 0).toFixed(2)}</span>
-                <span>{new Date(order.createdAt || Date.now()).toLocaleDateString()}</span>
+                <span>{formatOrderDate(order.createdAt)}</span>
               </div>
             </article>
           ))}

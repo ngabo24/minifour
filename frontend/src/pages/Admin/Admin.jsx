@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { MENU_CATEGORIES } from '../../assets/assets'
 import './Admin.css'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin)).replace(/\/+$/, '')
@@ -9,8 +10,8 @@ const emptyProductForm = {
   description: '',
   price: '',
   costPrice: '',
-  category: 'Salad',
-  image: 'food_1.png',
+  category: MENU_CATEGORIES[0],
+  image: 'menu-chicken-rice.webp',
   stock: '10',
   featured: false,
   ingredients: [],
@@ -262,7 +263,7 @@ const Admin = () => {
         setProductForm((prev) => ({ ...prev, image: String(reader.result || '') }))
       }
       reader.readAsDataURL(file)
-    } catch (error) {
+    } catch {
       setAuthError('Image upload failed. Falling back to the local preview copy.')
     }
   }
@@ -916,7 +917,11 @@ const Admin = () => {
                 <input name='costPrice' type='number' min='0' step='0.01' value={productForm.costPrice} onChange={handleProductInput} placeholder='Cost price' />
               </div>
               <div className='two-column'>
-                <input name='category' value={productForm.category} onChange={handleProductInput} placeholder='Category' required />
+                <select name='category' value={productForm.category} onChange={handleProductInput} required>
+                  {MENU_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
                 <input type='text' name='image' value={productForm.image} onChange={handleProductInput} placeholder='Image URL or data URL' required />
               </div>
               <label className='upload-box'>
@@ -1322,6 +1327,46 @@ const Admin = () => {
               <textarea name='notes' value={reservationForm.notes} onChange={handleReservationInput} placeholder='Guest notes' />
               <button type='submit' className='primary-btn'>Book reservation</button>
             </form>
+          </section>
+
+          <section className='admin-panel reservations-list-panel'>
+            <div className='panel-header'>
+              <h2>Reservations</h2>
+              <span className='status-pill'>{filteredReservations.length}</span>
+            </div>
+
+            <div className='admin-list'>
+              {filteredReservations.length === 0 && (
+                <p className='admin-empty-state'>No reservations match the current filters.</p>
+              )}
+
+              {filteredReservations.map((reservation) => (
+                <div className='admin-item' key={reservation._id}>
+                  <div>
+                    <strong>{reservation.guestName}</strong>
+                    <p>
+                      {reservation.reservationDate} at {reservation.reservationTime} • Party of {reservation.partySize}
+                      {reservation.tableNumber ? ` • Table ${reservation.tableNumber}` : ''}
+                    </p>
+                    {reservation.notes && <p>{reservation.notes}</p>}
+                  </div>
+                  <div className='admin-item-actions'>
+                    <select
+                      value={reservation.status}
+                      onChange={(event) => handleReservationStatusChange(reservation._id, event.target.value)}
+                      aria-label={`Status for ${reservation.guestName}`}
+                    >
+                      <option value='pending'>pending</option>
+                      <option value='confirmed'>confirmed</option>
+                      <option value='arrived'>arrived</option>
+                      <option value='seated'>seated</option>
+                      <option value='cancelled'>cancelled</option>
+                    </select>
+                    <button type='button' className='danger' onClick={() => handleDeleteReservation(reservation._id)}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
       )}

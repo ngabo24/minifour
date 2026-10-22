@@ -9,6 +9,7 @@ const Table = require('../models/Table')
 const Reservation = require('../models/Reservation')
 const protect = require('../middleware/authMiddleware')
 const adminOnly = require('../middleware/adminMiddleware')
+const { MENU_CATEGORIES, isValidCategory } = require('../data/categories')
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -117,13 +118,17 @@ router.post('/products', async (req, res) => {
     return res.status(400).json({ message: 'Name, description, price, and category are required.' })
   }
 
+  if (!isValidCategory(category)) {
+    return res.status(400).json({ message: `Category must be one of: ${MENU_CATEGORIES.join(', ')}.` })
+  }
+
   const product = await Product.create({
     name,
     description,
     price: Number(price),
     costPrice: Number(costPrice || 0),
-    category,
-    image: image || 'default.png',
+    category: String(category).trim(),
+    image: image || 'menu-chicken-rice.webp',
     stock: Number(stock || 0),
     featured: Boolean(featured),
     ingredients: Array.isArray(ingredients) ? ingredients : []
@@ -140,11 +145,15 @@ router.put('/products/:id', async (req, res) => {
     return res.status(404).json({ message: 'Product not found.' })
   }
 
+  if (category && !isValidCategory(category)) {
+    return res.status(400).json({ message: `Category must be one of: ${MENU_CATEGORIES.join(', ')}.` })
+  }
+
   product.name = name || product.name
   product.description = description || product.description
   product.price = price ?? product.price
   product.costPrice = costPrice ?? product.costPrice
-  product.category = category || product.category
+  product.category = category ? String(category).trim() : product.category
   product.image = image || product.image
   product.stock = stock ?? product.stock
   product.featured = typeof featured === 'boolean' ? featured : product.featured
@@ -160,8 +169,28 @@ router.delete('/products/:id', async (req, res) => {
     return res.status(404).json({ message: 'Product not found.' })
   }
 
+  let imageDeleted = false
+  try {
+    const imageUrl = new URL(product.image)
+    const expectedHost = `${process.env.CLOUDINARY_CLOUD_NAME}.res.cloudinary.com`
+    const publicIdMatch = imageUrl.hostname === expectedHost
+      ? imageUrl.pathname.match(/\/image\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/)
+      : null
+
+    if (publicIdMatch) {
+      const publicId = decodeURIComponent(publicIdMatch[1])
+      const result = await cloudinary.uploader.destroy(publicId, {
+        resource_type: 'image',
+        invalidate: true,
+      })
+      imageDeleted = result.result === 'ok' || result.result === 'not found'
+    }
+  } catch (error) {
+    console.error('Product image cleanup failed:', error.message)
+  }
+
   await product.deleteOne()
-  res.json({ message: 'Product deleted successfully.' })
+  res.json({ message: 'Product deleted successfully.', imageDeleted })
 })
 
 router.get('/tables', async (req, res) => {

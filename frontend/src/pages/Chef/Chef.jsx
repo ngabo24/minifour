@@ -62,9 +62,13 @@ const Chef = () => {
       })
     })
 
-    void fetchOrders()
+    // Deferring the initial load keeps the state update out of the effect body.
+    const initialLoad = setTimeout(() => {
+      void fetchOrders()
+    }, 0)
 
     return () => {
+      clearTimeout(initialLoad)
       socket.off('order:updated')
       socket.disconnect()
     }

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
-const path = require('path')
+const { loadEnv } = require('./env')
 
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
+loadEnv()
 
 const connectDB = async () => {
   const mongoURI = process.env.MONGODB_URI
@@ -23,3 +23,5 @@ const connectDB = async () => {
 }
 
 module.exports = connectDB
+module.exports.connectDB = connectDB
+

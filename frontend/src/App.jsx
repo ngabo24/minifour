@@ -26,7 +26,7 @@ const getStoredGuestAccess = () => {
     }
 
     return value
-  } catch (error) {
+  } catch {
     sessionStorage.removeItem(GUEST_ACCESS_KEY)
     return null
   }
@@ -35,16 +35,18 @@ const getStoredGuestAccess = () => {
 const GuestAccessGate = ({ onGuestAccessGranted }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const [tableNumber, setTableNumber] = useState('')
+  const [tableInput, setTableInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  useEffect(() => {
-    const rawTable = new URLSearchParams(location.search).get('table')
-    if (rawTable) {
-      setTableNumber(rawTable)
-    }
-  }, [location])
+  // The table number comes from the URL, so it is derived rather than stored
+  // in state that has to be synchronised by an effect.
+  const queryTable = new URLSearchParams(location.search).get('table') || ''
+  const tableNumber = queryTable || tableInput
+
+  const handleTableInputChange = (event) => {
+    setTableInput(event.target.value)
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -99,7 +101,7 @@ const GuestAccessGate = ({ onGuestAccessGranted }) => {
             type='number'
             min='1'
             value={tableNumber}
-            onChange={(event) => setTableNumber(event.target.value)}
+            onChange={handleTableInputChange}
             placeholder='Table number'
             required
             style={{ border: '1px solid #eadfcf', borderRadius: '12px', padding: '14px 16px', fontSize: '1rem' }}
@@ -158,7 +160,7 @@ const App = () => {
         sessionStorage.setItem(GUEST_ACCESS_KEY, JSON.stringify(access))
         sessionStorage.setItem('minifour-guest-email', `guest-table-${access.tableNumber}@minifour.local`)
         setGuestAccess(access)
-      } catch (error) {
+      } catch {
         setGuestAccess(null)
       }
     }

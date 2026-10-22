@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useEffect, useState } from 'react'
 import { food_list } from '../assets/assets'
+import { menuImageByFilename } from '../assets/menuProducts'
 
 export const StoreContext = createContext(null)
 
@@ -16,11 +17,24 @@ const filenameImageMap = Object.fromEntries(
 )
 
 const resolveProductImage = (product) => {
-  const imageName = typeof product?.image === 'string' ? product.image.split('/').pop() : ''
+  const rawImage = typeof product?.image === 'string' ? product.image.trim() : ''
+
+  // Remote uploads (Cloudinary) are used as-is.
+  if (/^https?:\/\//i.test(rawImage)) {
+    return rawImage
+  }
+
+  // Inline uploads are already a usable data URL.
+  if (rawImage.startsWith('data:image')) {
+    return rawImage
+  }
+
+  const imageName = rawImage.split('/').pop()
   const directFilenameMatch = imageName ? filenameImageMap[imageName] : null
   const directNameMatch = product?.name ? staticImageMap[normalizeKey(product.name)] : null
+  const menuImageMatch = imageName ? menuImageByFilename[imageName] : null
 
-  return directFilenameMatch || directNameMatch || product?.image || '/src/assets/food_1.png'
+  return directFilenameMatch || menuImageMatch || directNameMatch || rawImage || '/src/assets/food_1.png'
 }
 
 const StoreContextProvider = ({ children }) => {

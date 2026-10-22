@@ -6,10 +6,6 @@ import menu_1 from './menu_1.png'
 import menu_2 from './menu_2.png'
 import menu_3 from './menu_3.png'
 import menu_4 from './menu_4.png'
-import menu_5 from './menu_5.png'
-import menu_6 from './menu_6.png'
-import menu_7 from './menu_7.png'
-import menu_8 from './menu_8.png'
 
 import food_1 from './food_1.png'
 import food_2 from './food_2.png'
@@ -60,6 +56,15 @@ import bag_icon from './bag_icon.png'
 import logout_icon from './logout_icon.png'
 import parcel_icon from './parcel_icon.png'
 
+// The food photos are also imported directly by the menu image map, so they
+// are re-exported here to keep a single source of truth for the asset paths.
+export {
+    food_1, food_2, food_3, food_4, food_5, food_6, food_7, food_8,
+    food_9, food_10, food_11, food_12, food_13, food_14, food_15, food_16,
+    food_17, food_18, food_19, food_20, food_21, food_22, food_23, food_24,
+    food_25, food_26, food_27, food_28, food_29, food_30, food_31, food_32,
+}
+
 export const assets = {
     logo,
     basket_icon,
@@ -82,39 +87,33 @@ export const assets = {
     parcel_icon
 }
 
+// Canonical menu categories. These match backend/data/categories.js so that the
+// storefront filters and the database always agree on the same category names.
+export const MENU_CATEGORIES = [
+    'Main Dishes Combo',
+    'Snacks & Sides',
+    'Desserts',
+    'Drinks',
+]
+
 export const menu_list = [
     {
-        menu_name: "Salad",
+        menu_name: 'Main Dishes Combo',
         menu_image: menu_1
     },
     {
-        menu_name: "Rolls",
+        menu_name: 'Snacks & Sides',
         menu_image: menu_2
     },
     {
-        menu_name: "Deserts",
+        menu_name: 'Desserts',
         menu_image: menu_3
     },
     {
-        menu_name: "Sandwich",
+        menu_name: 'Drinks',
         menu_image: menu_4
     },
-    {
-        menu_name: "Cake",
-        menu_image: menu_5
-    },
-    {
-        menu_name: "Pure Veg",
-        menu_image: menu_6
-    },
-    {
-        menu_name: "Pasta",
-        menu_image: menu_7
-    },
-    {
-        menu_name: "Noodles",
-        menu_image: menu_8
-    }]
+]
 
 export const food_list = [
     {

@@ -1,22 +1,18 @@
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
+const { getJwtSecret } = require('../config/env')
 
 const router = express.Router()
 const loginAttempts = new Map()
 const MAX_LOGIN_ATTEMPTS = 5
 const LOGIN_WINDOW_MS = 10 * 60 * 1000
-const jwtSecret = process.env.JWT_SECRET || 'minifour-super-secure-dev-secret-change-me'
+const jwtSecret = getJwtSecret()
 
 const getClientKey = (req) => (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim()
 
 const generateToken = (id, role) =>
   jwt.sign({ id, role }, jwtSecret, { expiresIn: '12h' })
-
-const normalizeRole = (role) => {
-  const allowedRoles = ['admin', 'chef', 'client']
-  return allowedRoles.includes(role) ? role : 'client'
-}
 
 router.post('/register', async (req, res) => {
   const { name, email, password, role } = req.body
@@ -31,6 +27,12 @@ router.post('/register', async (req, res) => {
     })
   }
 
+  // Public registration can only ever create a client account. Staff accounts
+  // are provisioned by an administrator through the admin API.
+  if (role && !['client'].includes(role)) {
+    return res.status(403).json({ message: 'Staff accounts cannot be created through public registration.' })
+  }
+
   const existingUser = await User.findOne({ email: email.toLowerCase().trim() })
   if (existingUser) {
     return res.status(400).json({ message: 'User already exists with that email.' })
@@ -40,7 +42,7 @@ router.post('/register', async (req, res) => {
     name: name.trim(),
     email: email.toLowerCase().trim(),
     password,
-    role: normalizeRole(role)
+    role: 'client'
   })
 
   res.status(201).json({

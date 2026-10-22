@@ -1,5 +1,6 @@
 const express = require('express')
 const Product = require('../models/Product')
+const { MENU_CATEGORIES } = require('../data/categories')
 
 const router = express.Router()
 
@@ -13,7 +14,12 @@ router.get('/', async (req, res) => {
 
 router.get('/categories', async (req, res) => {
   const categories = await Product.distinct('category')
-  res.json(categories)
+
+  // Always report the canonical list first, then any custom categories that
+  // were added by an administrator.
+  const customCategories = categories.filter((category) => !MENU_CATEGORIES.includes(category))
+
+  res.json([...MENU_CATEGORIES, ...customCategories])
 })
 
 router.get('/:id', async (req, res) => {

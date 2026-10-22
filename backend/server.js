@@ -1,10 +1,14 @@
-const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, '.env') })
 const http = require('http')
 const express = require('express')
 const cors = require('cors')
+const helmet = require('helmet')
+const rateLimit = require('express-rate-limit')
 const QRCode = require('qrcode')
 const { Server } = require('socket.io')
+const { loadEnv } = require('./config/env')
+
+loadEnv()
+
 const connectDB = require('./config/db')
 const { seedProducts } = require('./seed')
 const productRoutes = require('./routes/productRoutes')
@@ -15,6 +19,28 @@ const adminRoutes = require('./routes/adminRoutes')
 const chefRoutes = require('./routes/chefRoutes')
 const reservationRoutes = require('./routes/reservationRoutes')
 const Table = require('./models/Table')
+const flyerProducts = require('./data/products')
+
+const ensureFlyerMenu = async () => {
+  const legacyNames = [
+    'Greek salad', 'Veg salad', 'Clover Salad', 'Chicken Salad', 'Lasagna Rolls', 'Peri Peri Rolls', 'Chicken Rolls', 'Veg Rolls',
+    'Ripple Ice Cream', 'Fruit Ice Cream', 'Jar Ice Cream', 'Vanilla Ice Cream', 'Chicken Sandwich', 'Vegan Sandwich', 'Grilled Sandwich', 'Bread Sandwich',
+    'Cup Cake', 'Vegan Cake', 'Butterscotch Cake', 'Sliced Cake', 'Sushi Combo', 'Mushroom Pasta', 'Tomato Pasta', 'Spaghetti Delight',
+    'Veg Noodles', 'Sesame Noodles', 'Prawn Noodles', 'Hot Noodles', 'Veg Bowl', 'Green Feast', 'Garden Bowl', 'Pure Veg Wrap',
+  ]
+  const Product = require('./models/Product')
+  const legacyFilter = {
+    name: { $in: legacyNames },
+    image: /^food_\d+\.png$/,
+  }
+  const legacyCount = await Product.countDocuments(legacyFilter)
+
+  if (legacyCount !== legacyNames.length) return
+
+  await Product.deleteMany(legacyFilter)
+  await Product.insertMany(flyerProducts)
+  console.log(`Replaced ${legacyCount} legacy sample products with the flyer menu.`)
+}
 
 const buildTableQrCodeUrl = async (tableNumber) => {
   const targetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}?table=${tableNumber}`
@@ -40,7 +66,10 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'https://minifour.vercel.app',
   process.env.FRONTEND_URL,
-].filter(Boolean)
+]
+  .filter(Boolean)
+  .flatMap((origin) => origin.split(',').map((entry) => entry.trim()))
+  .filter((origin) => /^https?:\/\//.test(origin))
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -65,9 +94,68 @@ const io = new Server(server, {
 })
 
 app.set('io', io)
+app.set('trust proxy', 1)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+}))
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
-app.use(express.json())
+app.use(express.json({ limit: '1mb' }))
+
+const apiLimiter = rateLimit({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
+  limit: Number(process.env.RATE_LIMIT_MAX || 300),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { message: 'Too many requests. Please slow down and try again shortly.' },
+})
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: Number(process.env.AUTH_RATE_LIMIT_MAX || 30),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { message: 'Too many attempts. Please wait before trying again.' },
+})
+
+const orderLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: Number(process.env.ORDER_RATE_LIMIT_MAX || 30),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { message: 'Too many orders were submitted. Please wait before trying again.' },
+})
+
+app.use('/api', apiLimiter)
+app.use('/api/auth', authLimiter)
+app.use('/api/orders', orderLimiter)
+
+let databaseReadyPromise = null
+
+// Connects to MongoDB exactly once per process. Serverless runtimes re-use the
+// same module instance across invocations, so the promise is cached to avoid
+// opening a new connection pool on every request.
+const ensureDatabaseReady = () => {
+  if (!databaseReadyPromise) {
+    databaseReadyPromise = connectDB().catch((error) => {
+      databaseReadyPromise = null
+      throw error
+    })
+  }
+
+  return databaseReadyPromise
+}
+
+app.use('/api', async (req, res, next) => {
+  try {
+    await ensureDatabaseReady()
+    next()
+  } catch (error) {
+    console.error('Database connection failed:', error.message)
+    res.status(503).json({ message: 'The database is unavailable. Please try again shortly.' })
+  }
+})
 
 io.on('connection', (socket) => {
   socket.on('join-chef-room', () => {
@@ -209,7 +297,7 @@ const ensureDefaultAdmin = async () => {
 
 const startServer = async () => {
   try {
-    await connectDB()
+    await ensureDatabaseReady()
     const Product = require('./models/Product')
     const count = await Product.countDocuments()
 
@@ -217,6 +305,7 @@ const startServer = async () => {
       await seedProducts({ closeConnectionAfter: false })
     }
 
+    await ensureFlyerMenu()
     await ensureDefaultAdmin()
     await ensureDefaultIngredients()
     await ensureDefaultTables()
@@ -231,4 +320,13 @@ const startServer = async () => {
   }
 }
 
-startServer()
+if (require.main === module) {
+  startServer()
+}
+
+// Vercel (and any other serverless runtime) imports this file and expects the
+// Express application itself to be exported.
+module.exports = app
+module.exports.app = app
+module.exports.server = server
+module.exports.ensureDatabaseReady = ensureDatabaseReady
