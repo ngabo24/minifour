@@ -385,3 +385,38 @@ module.exports = app
 module.exports.app = app
 module.exports.server = server
 module.exports.ensureDatabaseReady = ensureDatabaseReady
+
+app.post('/api/auth/manager-login', async (req, res) => {
+  const { email, password } = req.body
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' })
+  }
+
+  const user = await User.findOne({ email: String(email).toLowerCase().trim() })
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid email or password.' })
+  }
+
+  const isMatch = await user.comparePassword(password)
+  if (!isMatch) {
+    return res.status(401).json({ message: 'Invalid email or password.' })
+  }
+
+  if (!['manager', 'admin'].includes(user.role)) {
+    return res.status(403).json({ message: 'Manager or admin access required.' })
+  }
+
+  const jwtSecret = getJwtSecret()
+  const token = jwt.sign({ id: user._id, role: user.role }, jwtSecret, { expiresIn: '7d' })
+
+  res.json({
+    token,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }
+  })
+})

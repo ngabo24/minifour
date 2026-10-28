@@ -187,7 +187,7 @@ const Admin = () => {
     setAuthError('')
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(`${API_URL}/api/auth/manager-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginForm),
@@ -199,14 +199,14 @@ const Admin = () => {
         throw new Error(data.message || 'Login failed.')
       }
 
-      if (data.user.role !== 'admin') {
-        throw new Error('This account is not an admin account.')
+      if (!['admin', 'manager'].includes(data.user.role)) {
+        throw new Error('This account is not authorized for admin/manager access.')
       }
 
       sessionStorage.setItem('minifour-token', data.token)
       sessionStorage.setItem('minifour-user', JSON.stringify(data.user))
       setAdminUser(data.user)
-      setMessage('Logged in as admin.')
+      setMessage('Logged in as manager/admin.')
     } catch (error) {
       setAuthError(error.message)
     } finally {
@@ -825,15 +825,15 @@ const Admin = () => {
     return (
       <div className='admin-auth-page'>
         <div className='admin-auth-card'>
-          <h2>Admin Login</h2>
-          <p>Use the default admin account or a created admin account to manage the restaurant.</p>
+          <h2>Manager / Admin Login</h2>
+          <p>Use a manager or admin account to manage orders and restaurant settings.</p>
           <form onSubmit={handleLogin} className='admin-login-form'>
             <input
               type='email'
               name='email'
               value={loginForm.email}
               onChange={(event) => setLoginForm((prev) => ({ ...prev, email: event.target.value }))}
-              placeholder='admin@minifour.com'
+              placeholder='manager@minifour.com'
               required
             />
             <input
@@ -841,7 +841,7 @@ const Admin = () => {
               name='password'
               value={loginForm.password}
               onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))}
-              placeholder='Admin@Minifour123'
+              placeholder='Password'
               required
             />
             {authError && <p className='admin-error'>{authError}</p>}
@@ -1041,11 +1041,12 @@ const Admin = () => {
               <input name='name' value={customerForm.name} onChange={handleUserInput} placeholder='Full name' required />
               <input name='email' type='email' value={customerForm.email} onChange={handleUserInput} placeholder='Email' required />
               <input name='password' type='password' value={customerForm.password} onChange={handleUserInput} placeholder='Temporary password' required />
-              <select name='role' value={customerForm.role} onChange={handleUserInput}>
-                <option value='admin'>Admin</option>
-                <option value='chef'>Chef</option>
-                <option value='client'>Client</option>
-              </select>
+                <select name='role' value={customerForm.role} onChange={handleUserInput}>
+                  <option value='admin'>Admin</option>
+                  <option value='manager'>Manager</option>
+                  <option value='chef'>Chef</option>
+                  <option value='client'>Client</option>
+                </select>
               <button type='submit' className='primary-btn'>Create user</button>
             </form>
           </section>

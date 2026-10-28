@@ -8,7 +8,6 @@ const Ingredient = require('../models/Ingredient')
 const Table = require('../models/Table')
 const Reservation = require('../models/Reservation')
 const protect = require('../middleware/authMiddleware')
-const adminOnly = require('../middleware/adminMiddleware')
 const { MENU_CATEGORIES, isValidCategory } = require('../data/categories')
 
 cloudinary.config({
@@ -39,9 +38,12 @@ const buildTableQrCodeUrl = async (tableNumber) => {
 const router = express.Router()
 
 router.use(protect)
-router.use(adminOnly)
+router.use((req, res, next) => {
+  if (req.user.role === 'admin' || req.user.role === 'manager') return next()
+  return res.status(403).json({ message: 'Admin or manager access required.' })
+})
 
-router.post('/upload-image', protect, adminOnly, async (req, res) => {
+router.post('/upload-image', async (req, res) => {
   const { file, filename, mimeType, folderId } = req.body || {}
 
   if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
@@ -130,7 +132,7 @@ router.post('/users', async (req, res) => {
     return res.status(400).json({ message: 'A user with this email already exists.' })
   }
 
-  const normalizedRole = ['admin', 'chef', 'client'].includes(role) ? role : 'client'
+  const normalizedRole = ['admin', 'chef', 'client', 'manager'].includes(role) ? role : 'client'
   const user = await User.create({ name: String(name).trim(), email: normalizedEmail, password, role: normalizedRole })
 
   res.status(201).json({
