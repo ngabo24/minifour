@@ -170,7 +170,7 @@ const Admin = () => {
 
 
   useEffect(() => {
-    if (!adminUser?.role || adminUser.role !== 'admin') {
+    if (!adminUser?.role || !['admin', 'manager'].includes(adminUser.role)) {
       return undefined
     }
 
