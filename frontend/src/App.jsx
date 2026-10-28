@@ -180,9 +180,10 @@ const App = () => {
 
   const isAuthenticated = Boolean(sessionStorage.getItem('minifour-token'))
   const isGuestAllowed = Boolean(guestAccess)
-  const isProtectedPublicRoute = !['/admin', '/chef', '/access'].includes(location.pathname) &&
+  const isProtectedPublicRoute = !['/admin', '/chef', '/access', '/manager'].includes(location.pathname) &&
     !location.pathname.startsWith('/admin') &&
     !location.pathname.startsWith('/chef') &&
+    !location.pathname.startsWith('/manager') &&
     !location.pathname.startsWith('/table/')
 
   const shouldBlockPublicAccess = isProtectedPublicRoute && !isAuthenticated && !isGuestAllowed
@@ -206,6 +207,7 @@ const App = () => {
               <Route path='/order-confirmation' element={<OrderConfirmation />} />
               <Route path='/orders' element={<Orders />} />
               <Route path='/admin' element={<Admin />} />
+              <Route path='/manager' element={<Admin />} />
               <Route path='/chef' element={<Chef />} />
               <Route path='/table/:tableNumber' element={<Home />} />
               <Route path='/access' element={<GuestAccessGate onGuestAccessGranted={setGuestAccess} />} />
