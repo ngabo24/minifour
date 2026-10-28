@@ -9,13 +9,15 @@ router.use(protect)
 router.use(chefOnly)
 
 router.get('/orders', async (req, res) => {
-  const orders = await Order.find().populate('user', 'name email').sort({ createdAt: -1 })
+  const orders = await Order.find({
+    status: { $in: ['approved', 'confirmed', 'preparing', 'ready'] }
+  }).populate('user', 'name email').sort({ createdAt: -1 })
   res.json(orders)
 })
 
 router.put('/orders/:id/status', async (req, res) => {
   const { status } = req.body
-  const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'served', 'cancelled']
+  const validStatuses = ['preparing', 'ready', 'served', 'cancelled']
 
   if (!status || !validStatuses.includes(status)) {
     return res.status(400).json({ message: 'Invalid order status.' })

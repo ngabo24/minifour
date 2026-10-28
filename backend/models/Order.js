@@ -40,7 +40,18 @@ const orderSchema = new mongoose.Schema(
     paymentStatus: { type: String, enum: ['unpaid', 'pending_confirmation', 'paid', 'manual_paid', 'cancelled', 'failed'], default: 'pending_confirmation' },
     paymentReference: { type: String, default: '' },
     address: { type: addressSchema, required: true },
-    status: { type: String, enum: ['pending', 'confirmed', 'preparing', 'ready', 'served', 'cancelled'], default: 'pending' }
+    status: { type: String, enum: ['pending', 'awaiting_approval', 'approved', 'confirmed', 'preparing', 'ready', 'served', 'cancelled'], default: 'awaiting_approval' },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    approvedAt: { type: Date },
+    approvalNote: { type: String, default: '' },
+    ebmRcptNo: { type: String, default: '' },
+    ebmIntrlData: { type: String, default: '' },
+    ebmRcptSign: { type: String, default: '' },
+    ebmSdcId: { type: String, default: '' },
+    ebmMrcNo: { type: String, default: '' },
+    ebmSyncStatus: { type: String, enum: ['pending', 'synced', 'failed'], default: 'pending' },
+    ebmError: { type: String, default: '' },
+    ebmSyncedAt: { type: Date }
   },
   { timestamps: true }
 )

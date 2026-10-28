@@ -339,7 +339,7 @@ router.get('/orders', async (req, res) => {
 
 router.put('/orders/:id/status', async (req, res) => {
   const { status } = req.body
-  const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'served', 'cancelled']
+  const validStatuses = ['pending', 'awaiting_approval', 'approved', 'confirmed', 'preparing', 'ready', 'served', 'cancelled']
 
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ message: 'Invalid order status.' })
@@ -353,6 +353,12 @@ router.put('/orders/:id/status', async (req, res) => {
   order.status = status
   if (status === 'cancelled') {
     order.paymentStatus = 'cancelled'
+  } else if (status === 'approved' || status === 'confirmed') {
+    order.approvedBy = req.user._id
+    order.approvedAt = new Date()
+    if (order.paymentStatus === 'unpaid') {
+      order.paymentStatus = 'manual_paid'
+    }
   } else if (order.paymentStatus === 'unpaid') {
     order.paymentStatus = 'manual_paid'
   }

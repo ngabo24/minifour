@@ -1431,14 +1431,24 @@ const Admin = () => {
 
               <div className='order-summary'>
                 <span>Total: {formatCurrency(Number(order.total || 0))}</span>
-                <select value={order.status} onChange={(event) => handleStatusChange(order._id, event.target.value)}>
-                  <option value='pending'>pending</option>
-                  <option value='confirmed'>confirmed</option>
-                  <option value='preparing'>preparing</option>
-                  <option value='ready'>ready</option>
-                  <option value='served'>served</option>
-                  <option value='cancelled'>cancelled</option>
-                </select>
+                {order.status === 'awaiting_approval' && (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button type='button' className='primary-btn small' onClick={() => handleStatusChange(order._id, 'approved')}>Approve</button>
+                    <button type='button' className='danger small' onClick={() => handleStatusChange(order._id, 'cancelled')}>Reject</button>
+                  </div>
+                )}
+                {order.status === 'approved' && (
+                  <button type='button' className='primary-btn small' onClick={() => handleStatusChange(order._id, 'confirmed')}>Send to kitchen</button>
+                )}
+                {!['awaiting_approval', 'approved'].includes(order.status) && (
+                  <select value={order.status} onChange={(event) => handleStatusChange(order._id, event.target.value)}>
+                    <option value='confirmed'>confirmed</option>
+                    <option value='preparing'>preparing</option>
+                    <option value='ready'>ready</option>
+                    <option value='served'>served</option>
+                    <option value='cancelled'>cancelled</option>
+                  </select>
+                )}
               </div>
             </div>
           ))}

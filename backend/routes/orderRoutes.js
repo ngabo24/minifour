@@ -5,6 +5,7 @@ const Product = require('../models/Product')
 const protect = require('../middleware/authMiddleware')
 const { optionalAuth } = require('../middleware/authMiddleware')
 const mtnMomo = require('../services/mtnMomo')
+const ebm = require('../services/ebm')
 
 const router = express.Router()
 
@@ -125,7 +126,7 @@ router.post('/', optionalAuth, async (req, res) => {
     total: subtotal + deliveryFee,
     totalCost,
     address,
-    status: 'pending'
+    status: 'awaiting_approval'
   })
 
   let paymentInitiationError = ''
@@ -148,6 +149,27 @@ router.post('/', optionalAuth, async (req, res) => {
   const io = req.app.get('io')
   io?.emit('order:updated', order)
   io?.to('chef-room').emit('order:updated', order)
+
+  if (ebm.isConfigured()) {
+    try {
+      const ebmResult = await ebm.sendSalesInvoice(order)
+      if (ebmResult?.data) {
+        order.ebmRcptNo = ebmResult.data.rcptNo
+        order.ebmIntrlData = ebmResult.data.intrlData
+        order.ebmRcptSign = ebmResult.data.rcptSign
+        order.ebmSdcId = ebmResult.data.sdcId
+        order.ebmMrcNo = ebmResult.data.mrcNo
+        order.ebmSyncStatus = 'synced'
+        order.ebmSyncedAt = new Date()
+        await order.save()
+      }
+    } catch (e) {
+      console.error('EBM sync failed:', e.message)
+      order.ebmSyncStatus = 'failed'
+      order.ebmError = e.message
+      await order.save()
+    }
+  }
 
   res.status(201).json({
     message: 'Order placed successfully.',
