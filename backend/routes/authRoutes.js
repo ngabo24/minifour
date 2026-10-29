@@ -101,4 +101,37 @@ router.post('/login', async (req, res) => {
   })
 })
 
+router.post('/manager-login', async (req, res) => {
+  const { email, password } = req.body
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' })
+  }
+
+  const normalizedEmail = String(email).toLowerCase().trim()
+  const user = await User.findOne({ email: normalizedEmail })
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid email or password.' })
+  }
+
+  const isMatch = await user.comparePassword(password)
+  if (!isMatch) {
+    return res.status(401).json({ message: 'Invalid email or password.' })
+  }
+
+  if (!['manager', 'admin'].includes(user.role)) {
+    return res.status(403).json({ message: 'Manager or admin access required.' })
+  }
+
+  res.json({
+    token: generateToken(user._id, user.role),
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }
+  })
+})
+
 module.exports = router
