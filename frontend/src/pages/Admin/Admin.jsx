@@ -81,7 +81,15 @@ const Admin = () => {
     lowStockIngredients: 0,
     ingredientCount: 0,
   })
-  const [activeTab, setActiveTab] = useState('products')
+  const isManagerOnly = adminUser?.role === 'manager'
+  const isAdminUser = adminUser?.role === 'admin'
+
+  const tabs = useMemo(() => {
+    if (isManagerOnly) {
+      return ['orders', 'payments']
+    }
+    return ['products', 'users', 'ingredients', 'tables', 'analytics', 'reservations', 'payments']
+  }, [isManagerOnly])
   const [loading, setLoading] = useState(false)
   const [productForm, setProductForm] = useState(emptyProductForm)
   const [customerForm, setCustomerForm] = useState(emptyUserForm)
@@ -97,6 +105,7 @@ const Admin = () => {
   const [driveImages, setDriveImages] = useState([])
   const [showDriveGallery, setShowDriveGallery] = useState(false)
   const [loadingDrive, setLoadingDrive] = useState(false)
+  const [activeTab, setActiveTab] = useState('products')
 
   const loadDriveImages = async () => {
     if (!token) return
@@ -872,7 +881,9 @@ const Admin = () => {
           <p className='eyebrow'>Dashboard</p>
           <h1>Minifour Management</h1>
         </div>
-        <button type='button' className='logout-button' onClick={handleLogout}>Logout</button>
+          {adminUser?.role !== 'manager' && (
+            <button type='button' className='logout-button' onClick={handleLogout}>Logout</button>
+          )}
       </div>
 
       {message && <div className='admin-message'>{message}</div>}
@@ -927,16 +938,25 @@ const Admin = () => {
       </section>
 
       <div className='admin-tabs'>
-        <button type='button' className={activeTab === 'products' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('products')}>Products</button>
-        <button type='button' className={activeTab === 'users' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('users')}>Users</button>
-        <button type='button' className={activeTab === 'ingredients' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('ingredients')}>Ingredients</button>
-        <button type='button' className={activeTab === 'tables' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('tables')}>Tables</button>
-        <button type='button' className={activeTab === 'analytics' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('analytics')}>Analytics</button>
-        <button type='button' className={activeTab === 'reservations' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('reservations')}>Reservations</button>
-        <button type='button' className={activeTab === 'payments' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('payments')}>Payments</button>
+        {adminUser?.role === 'manager' ? (
+          <>
+            <button type='button' className={activeTab === 'orders' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('orders')}>Orders</button>
+            <button type='button' className={activeTab === 'payments' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('payments')}>Payments</button>
+          </>
+        ) : (
+          <>
+            <button type='button' className={activeTab === 'products' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('products')}>Products</button>
+            <button type='button' className={activeTab === 'users' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('users')}>Users</button>
+            <button type='button' className={activeTab === 'ingredients' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('ingredients')}>Ingredients</button>
+            <button type='button' className={activeTab === 'tables' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('tables')}>Tables</button>
+            <button type='button' className={activeTab === 'analytics' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('analytics')}>Analytics</button>
+            <button type='button' className={activeTab === 'reservations' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('reservations')}>Reservations</button>
+            <button type='button' className={activeTab === 'payments' ? 'admin-tab active' : 'admin-tab'} onClick={() => setActiveTab('payments')}>Payments</button>
+          </>
+        )}
       </div>
 
-      {activeTab === 'products' && (
+      {adminUser?.role !== 'manager' && activeTab === 'products' && (
         <div className='admin-grid'>
           <section className='admin-panel'>
             <div className='panel-header'>
@@ -1031,7 +1051,7 @@ const Admin = () => {
         </div>
       )}
 
-      {activeTab === 'users' && (
+      {adminUser?.role !== 'manager' && activeTab === 'users' && (
         <div className='admin-grid'>
           <section className='admin-panel'>
             <div className='panel-header'>
@@ -1072,7 +1092,7 @@ const Admin = () => {
         </div>
       )}
 
-      {activeTab === 'ingredients' && (
+      {adminUser?.role !== 'manager' && activeTab === 'ingredients' && (
         <div className='admin-grid'>
           <section className='admin-panel'>
             <div className='panel-header'>
@@ -1120,7 +1140,7 @@ const Admin = () => {
         </div>
       )}
 
-      {activeTab === 'tables' && (
+      {adminUser?.role !== 'manager' && activeTab === 'tables' && (
         <div className='admin-grid'>
           <section className='admin-panel'>
             <div className='panel-header'>
@@ -1159,7 +1179,7 @@ const Admin = () => {
         </div>
       )}
 
-      {activeTab === 'payments' && (
+      {adminUser?.role !== 'manager' && activeTab === 'payments' && (
         <div className='admin-grid payment-layout'>
           <section className='admin-panel'>
             <div className='panel-header'>
@@ -1208,7 +1228,7 @@ const Admin = () => {
         </div>
       )}
 
-      {activeTab === 'analytics' && (
+      {adminUser?.role !== 'manager' && activeTab === 'analytics' && (
         <div className='admin-grid analytics-layout'>
               <section className='admin-panel'>
             <div className='panel-header analytics-header'>
@@ -1273,7 +1293,7 @@ const Admin = () => {
         </div>
       )}
 
-      {activeTab === 'reservations' && (
+      {adminUser?.role !== 'manager' && activeTab === 'reservations' && (
         <div className='admin-grid reservation-layout'>
           <section className='admin-panel'>
             <div className='panel-header'>
@@ -1406,7 +1426,8 @@ const Admin = () => {
         </div>
       )}
 
-      <section className='admin-panel orders-panel'>
+      {(adminUser?.role === 'manager' ? activeTab === 'orders' : true) && (
+        <section className='admin-panel orders-panel'>
         <div className='panel-header'>
           <h2>Orders</h2>
         </div>
@@ -1455,6 +1476,7 @@ const Admin = () => {
           ))}
         </div>
       </section>
+      )}
     </div>
 
     {showDriveGallery && (
