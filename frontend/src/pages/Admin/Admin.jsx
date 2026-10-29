@@ -905,6 +905,55 @@ const Admin = () => {
         </div>
       )}
 
+      {activeTab === 'orders' && (
+        <section className='admin-panel orders-panel'>
+          <div className='panel-header'>
+            <h2>Orders</h2>
+          </div>
+          <div className='admin-orders'>
+            {orders.map((order) => (
+              <div className='order-card' key={order._id}>
+                <div className='order-card-top'>
+                  <div>
+                    <strong>#{order._id.slice(-6)}</strong>
+                    <p>{order.user?.name || order.guestName || 'Guest'} • {order.tableNumber ? `Table ${order.tableNumber}` : order.address?.city || 'Walk-in'}</p>
+                  </div>
+                  <span className='status-pill'>{order.status}</span>
+                </div>
+                <div className='order-items'>
+                  {(order.items || []).map((item, index) => (
+                    <div key={`${order._id}-${index}`}>
+                      {item.quantity}x {item.name} • {formatCurrency(Number(item.price))}
+                    </div>
+                  ))}
+                </div>
+                <div className='order-summary'>
+                  <span>Total: {formatCurrency(Number(order.total || 0))}</span>
+                  {order.status === 'awaiting_approval' && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button type='button' className='primary-btn small' onClick={() => handleStatusChange(order._id, 'approved')}>Approve</button>
+                      <button type='button' className='danger small' onClick={() => handleStatusChange(order._id, 'cancelled')}>Reject</button>
+                    </div>
+                  )}
+                  {order.status === 'approved' && (
+                    <button type='button' className='primary-btn small' onClick={() => handleStatusChange(order._id, 'confirmed')}>Send to kitchen</button>
+                  )}
+                  {!['awaiting_approval', 'approved'].includes(order.status) && (
+                    <select value={order.status} onChange={(event) => handleStatusChange(order._id, event.target.value)}>
+                      <option value='confirmed'>confirmed</option>
+                      <option value='preparing'>preparing</option>
+                      <option value='ready'>ready</option>
+                      <option value='served'>served</option>
+                      <option value='cancelled'>cancelled</option>
+                    </select>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {adminUser?.role !== 'manager' && (
         <section className='admin-panel summary-panel'>
           <div className='panel-header'>
